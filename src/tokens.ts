@@ -1,11 +1,7 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import {
-  IClientSession,
-  MainAreaWidget,
-  WidgetTracker
-} from '@jupyterlab/apputils';
+import { IClientSession } from '@jupyterlab/apputils';
 
 import { CodeEditor } from '@jupyterlab/codeeditor';
 
@@ -19,8 +15,9 @@ import { ISignal } from '@phosphor/signaling';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
 
+// TODO: remove that import when an interface has
+// been created for Model class
 import { Debugger } from './debugger';
-
 /**
  * An interface describing an application's visual debugger.
  */
@@ -40,9 +37,15 @@ export interface IDebugger {
   session: IDebugger.ISession;
 
   /**
-   * tracker for get instance of debugger.
+   * The debugger service.
    */
-  tracker: WidgetTracker<MainAreaWidget<Debugger>>;
+  readonly service: IDebugger.IService;
+
+  /**
+   * The debugger model.
+   * TODO: replace type with an interface
+   */
+  readonly model: Debugger.Model;
 }
 
 /**

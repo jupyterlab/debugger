@@ -27,18 +27,42 @@ import { IDebugger } from './tokens';
 
 import { IDataConnector } from '@jupyterlab/coreutils';
 
-export class Debugger extends SplitPanel {
+export class Debugger implements IDebugger {
   constructor(options: Debugger.IOptions) {
+    this.model = new Debugger.Model(options);
+    this.service = new DebugService(this.model);
+  }
+
+  readonly model: Debugger.Model;
+  readonly service: DebugService;
+
+  get session(): IDebugger.ISession {
+    return this.service.session;
+  }
+
+  set session(session: IDebugger.ISession) {
+    this.service.session = session;
+  }
+
+  get mode(): IDebugger.Mode {
+    return this.model.mode;
+  }
+
+  set mode(mode: IDebugger.Mode) {
+    this.model.mode = mode;
+  }
+}
+
+export class DebuggerWidget extends SplitPanel {
+  constructor(options: Debugger.Widget.IOptions) {
     super({ orientation: 'horizontal' });
     this.title.label = 'Debugger';
     this.title.iconClass = 'jp-BugIcon';
 
-    this.model = new Debugger.Model(options);
+    this.debug = options.debug;
 
     this.sidebar = new DebuggerSidebar();
-    this.model.sidebar = this.sidebar;
-
-    this.service = new DebugService(this.model);
+    this.debug.model.sidebar = this.sidebar;
 
     const { editorFactory } = options;
     this.editors = new DebuggerEditors({ editorFactory });
@@ -47,17 +71,22 @@ export class Debugger extends SplitPanel {
     this.addClass('jp-Debugger');
   }
 
+  readonly debug: Debugger;
   readonly editors: DebuggerEditors;
-  readonly model: Debugger.Model;
   readonly sidebar: DebuggerSidebar;
-  readonly service: DebugService;
+
+  get model(): Debugger.Model {
+    return this.debug.model;
+  }
+
+  get service(): DebugService {
+    return this.debug.service;
+  }
 
   dispose(): void {
     if (this.isDisposed) {
       return;
     }
-    this.model.dispose();
-    this.service.dispose();
     super.dispose();
   }
 
@@ -74,19 +103,22 @@ export namespace Debugger {
   export interface IOptions {
     editorFactory: CodeEditor.Factory;
     connector?: IDataConnector<ReadonlyJSONValue>;
-    id?: string;
     session?: IClientSession;
+  }
+
+  export namespace Widget {
+    export interface IOptions extends Debugger.IOptions {
+      debug: Debugger;
+    }
   }
 
   export class Model implements IDisposable {
     constructor(options: Debugger.Model.IOptions) {
       this.connector = options.connector || null;
-      this.id = options.id;
       void this._populate();
     }
 
     readonly connector: IDataConnector<ReadonlyJSONValue> | null;
-    readonly id: string;
 
     get mode(): IDebugger.Mode {
       return this._mode;

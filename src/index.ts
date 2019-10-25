@@ -24,7 +24,7 @@ import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 
 import { UUID } from '@phosphor/coreutils';
 
-import { Debugger } from './debugger';
+import { Debugger, DebuggerWidget } from './debugger';
 
 import { DebugSession } from './session';
 
@@ -72,10 +72,8 @@ async function setDebugSession(
   } else {
     debug.session.client = client;
   }
-  if (debug.session) {
-    await debug.session.restoreState();
-    app.commands.notifyCommandChanged();
-  }
+  await debug.session.restoreState();
+  app.commands.notifyCommandChanged();
 }
 
 class HandlerTracker<
@@ -89,11 +87,11 @@ class HandlerTracker<
     T extends IConsoleTracker | INotebookTracker,
     W extends ConsolePanel | NotebookPanel
   >(debug: IDebugger, tracker: T, widget: W): void {
-    if (debug.tracker.currentWidget && !this.handlers[widget.id]) {
+    if (!this.handlers[widget.id]) {
       const handler = new this.builder({
         tracker: tracker,
-        debuggerModel: debug.tracker.currentWidget.content.model,
-        debuggerService: debug.tracker.currentWidget.content.service
+        debuggerModel: debug.model,
+        debuggerService: debug.service
       });
       this.handlers[widget.id] = handler;
       widget.disposed.connect(() => {
@@ -228,23 +226,24 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     restorer: ILayoutRestorer | null,
     palette: ICommandPalette | null
   ): IDebugger => {
-    const tracker = new WidgetTracker<MainAreaWidget<Debugger>>({
-      namespace: 'debugger'
-    });
-
     const { commands, shell } = app;
     const editorFactory = editorServices.factoryService.newInlineEditor;
 
-    let widget: MainAreaWidget<Debugger>;
+    const tracker = new WidgetTracker<MainAreaWidget<DebuggerWidget>>({
+      namespace: 'debugger'
+    });
+    const debug = new Debugger({
+      connector: state,
+      editorFactory
+    });
+    let widget: MainAreaWidget<DebuggerWidget>;
 
     const getModel = () => {
-      return tracker.currentWidget ? tracker.currentWidget.content.model : null;
+      return debug.model;
     };
 
     const getService = () => {
-      return tracker.currentWidget
-        ? tracker.currentWidget.content.service
-        : null;
+      return debug.service;
     };
 
     commands.addCommand(CommandIDs.mount, {
@@ -288,8 +287,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.stop, {
       label: 'Stop',
       isEnabled: () => {
-        const service = getService();
-        return service && service.isStarted();
+        return getService().isStarted();
       },
       execute: async () => {
         await getService().session.stop();
@@ -300,8 +298,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.start, {
       label: 'Start',
       isEnabled: () => {
-        const service = getService();
-        return service && service.canStart();
+        return widget && getService().canStart();
       },
       execute: async () => {
         await getService().session.start();
@@ -312,8 +309,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.debugContinue, {
       label: 'Continue',
       isEnabled: () => {
-        const service = getService();
-        return service && service.isThreadStopped();
+        return getService().isThreadStopped();
       },
       execute: async () => {
         await getService().continue();
@@ -324,8 +320,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.next, {
       label: 'Next',
       isEnabled: () => {
-        const service = getService();
-        return service && service.isThreadStopped();
+        return getService().isThreadStopped();
       },
       execute: async () => {
         await getService().next();
@@ -335,8 +330,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.stepIn, {
       label: 'StepIn',
       isEnabled: () => {
-        const service = getService();
-        return service && service.isThreadStopped();
+        return getService().isThreadStopped();
       },
       execute: async () => {
         await getService().stepIn();
@@ -346,8 +340,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.debugNotebook, {
       label: 'Launch',
       isEnabled: () => {
-        const service = getService();
-        return service && service.isStarted();
+        return getService().isStarted();
       },
       execute: async () => {
         await tracker.currentWidget.content.service.launch(
@@ -384,12 +377,13 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
           widget = tracker.currentWidget;
         } else {
           widget = new MainAreaWidget({
-            content: new Debugger({
+            content: new DebuggerWidget({
               connector: state,
               editorFactory,
-              id
+              debug: debug
             })
           });
+          widget.id = id;
 
           void tracker.add(widget);
 
@@ -430,45 +424,12 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
       void restorer.restore(tracker, {
         command: CommandIDs.create,
         args: widget => ({
-          id: widget.content.model.id
+          id: widget.id
         }),
-        name: widget => widget.content.model.id
+        name: widget => widget.id
       });
     }
-
-    // Create a proxy to pass the `session` and `mode` to the debugger.
-
-    const proxy: IDebugger = Object.defineProperties(
-      {},
-      {
-        mode: {
-          get: (): IDebugger.Mode => {
-            return widget.content.model.mode;
-          },
-          set: (mode: IDebugger.Mode) => {
-            if (widget) {
-              widget.content.model.mode = mode;
-            }
-          }
-        },
-        session: {
-          get: (): IDebugger.ISession | null => {
-            return widget ? widget.content.service.session : null;
-          },
-          set: (src: IDebugger.ISession | null) => {
-            if (widget) {
-              widget.content.service.session = src;
-            }
-          }
-        },
-        tracker: {
-          get: (): WidgetTracker<MainAreaWidget<Debugger>> => {
-            return tracker;
-          }
-        }
-      }
-    );
-    return proxy;
+    return debug;
   }
 };
 
