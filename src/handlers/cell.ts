@@ -10,10 +10,10 @@ import { Editor, Doc } from 'codemirror';
 import { Breakpoints, SessionTypes } from '../breakpoints';
 
 import { Debugger } from '../debugger';
-import { IDebugger } from '../tokens';
-import { IDisposable } from '@phosphor/disposable';
 
-import { Signal } from '@phosphor/signaling';
+import { IDebugger } from '../tokens';
+
+import { IDisposable } from '@phosphor/disposable';
 
 const LINE_HIGHLIGHT_CLASS = 'jp-breakpoint-line-highlight';
 
@@ -24,7 +24,6 @@ export class CellManager implements IDisposable {
     this.breakpointsModel = options.breakpointsModel;
     this.activeCell = options.activeCell;
     this._type = options.type;
-    this.onActiveCellChanged();
 
     this.breakpointsModel.clearedBreakpoints.connect((_, type) => {
       if (type !== this._type) {
@@ -77,7 +76,6 @@ export class CellManager implements IDisposable {
     }
     this.removeListener(this.activeCell);
     this.cleanupHighlight();
-    Signal.clearData(this);
   }
 
   set previousCell(cell: CodeCell) {

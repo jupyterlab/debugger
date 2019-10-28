@@ -22,6 +22,7 @@ export class DebuggerNotebookHandler implements IDisposable {
     this.debuggerModel = options.debuggerModel;
     this.debuggerService = options.debuggerService;
     this.notebookTracker = options.tracker;
+    this.id = options.id;
     this.breakpoints = this.debuggerModel.sidebar.breakpoints.model;
     this.notebookTracker.activeCellChanged.connect(this.onNewCell, this);
     this.cellManager = new CellManager({
@@ -38,6 +39,7 @@ export class DebuggerNotebookHandler implements IDisposable {
   private debuggerService: IDebugger.IService;
   private breakpoints: Breakpoints.Model;
   private cellManager: CellManager;
+  private id: string;
   isDisposed: boolean;
 
   dispose(): void {
@@ -46,22 +48,26 @@ export class DebuggerNotebookHandler implements IDisposable {
     }
     this.isDisposed = true;
     this.cellManager.dispose();
-    this.notebookTracker.activeCellChanged.disconnect(this.onNewCell);
     Signal.clearData(this);
   }
 
   protected onNewCell(noteTracker: NotebookTracker, codeCell: CodeCell) {
-    if (this.cellManager) {
-      this.cellManager.activeCell = codeCell;
-    } else {
-      this.cellManager = new CellManager({
-        breakpointsModel: this.breakpoints,
-        activeCell: codeCell,
-        debuggerModel: this.debuggerModel,
-        debuggerService: this.debuggerService,
-        type: 'notebook'
-      });
-    }
+    // need timeout casue after dispose apear bad render problem
+    setTimeout(() => {
+      if (noteTracker.currentWidget.id === this.id) {
+        if (this.cellManager) {
+          this.cellManager.activeCell = codeCell;
+        } else {
+          this.cellManager = new CellManager({
+            breakpointsModel: this.breakpoints,
+            activeCell: codeCell,
+            debuggerModel: this.debuggerModel,
+            debuggerService: this.debuggerService,
+            type: 'notebook'
+          });
+        }
+      }
+    });
   }
 }
 
@@ -70,5 +76,6 @@ export namespace DebuggerNotebookHandler {
     debuggerModel: Debugger.Model;
     debuggerService: IDebugger.IService;
     tracker: INotebookTracker;
+    id: string;
   }
 }

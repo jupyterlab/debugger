@@ -91,15 +91,15 @@ class HandlerTracker<
     W extends ConsolePanel | NotebookPanel
   >(debug: IDebugger, tracker: T, widget: W): void {
     if (debug.tracker.currentWidget && !this.handlers[widget.id]) {
-      const handler = new this.builder({
+      this.handlers[widget.id] = new this.builder({
         tracker: tracker,
+        id: widget.id,
         debuggerModel: debug.tracker.currentWidget.content.model,
         debuggerService: debug.tracker.currentWidget.content.service
       });
-      this.handlers[widget.id] = handler;
-      widget.disposed.connect(() => {
+      widget.disposed.connect(async () => {
+        this.handlers[widget.id].dispose();
         delete this.handlers[widget.id];
-        handler.dispose();
       });
     }
   }
