@@ -290,7 +290,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
         return service.isStarted();
       },
       execute: async () => {
-        await service.session.stop();
+        await service.stop();
         commands.notifyCommandChanged();
       }
     });
@@ -301,7 +301,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
         return widget && service.canStart();
       },
       execute: async () => {
-        await service.session.start();
+        await service.start();
         commands.notifyCommandChanged();
       }
     });

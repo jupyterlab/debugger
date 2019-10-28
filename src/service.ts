@@ -70,7 +70,7 @@ export class DebugService implements IDebugger {
         void this.getAllFrames();
       } else if (event.event === 'continued') {
         this._threadStopped.delete(event.body.threadId);
-        this.onContinued();
+        this.clearCallStack();
       }
       this._eventMessage.emit(event);
     });
@@ -87,6 +87,15 @@ export class DebugService implements IDebugger {
 
   isThreadStopped(): boolean {
     return this._threadStopped.has(this.currentThread());
+  }
+
+  async start(): Promise<void> {
+    await this.session.start();
+  }
+
+  async stop(): Promise<void> {
+    await this.session.stop();
+    this.clearModel();
   }
 
   async continue(): Promise<void> {
@@ -256,10 +265,16 @@ export class DebugService implements IDebugger {
     });
   };
 
-  private onContinued() {
+  private clearCallStack() {
     this._model.linesCleared.emit();
     this._model.callstackModel.frames = [];
     this._model.variablesModel.scopes = [];
+  }
+
+  private clearModel() {
+    this.clearCallStack();
+    this._model.breakpointsModel.breakpoints = [];
+    this._threadStopped.clear();
   }
 
   private currentThread(): number {
