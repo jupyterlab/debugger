@@ -2,10 +2,10 @@
 // Distributed under the terms of the Modified BSD License.
 
 import {
+  ILabShell,
   ILayoutRestorer,
   JupyterFrontEnd,
-  JupyterFrontEndPlugin,
-  ILabShell
+  JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
 import {
@@ -17,11 +17,11 @@ import {
 
 import { IEditorServices } from '@jupyterlab/codeeditor';
 
-import { IConsoleTracker, ConsolePanel } from '@jupyterlab/console';
+import { ConsolePanel, IConsoleTracker } from '@jupyterlab/console';
 
 import { IStateDB } from '@jupyterlab/coreutils';
 
-import { IEditorTracker, FileEditor } from '@jupyterlab/fileeditor';
+import { FileEditor, IEditorTracker } from '@jupyterlab/fileeditor';
 
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 
@@ -94,14 +94,14 @@ class HandlerTracker<
     W extends ConsolePanel | NotebookPanel
   >(debug: IDebugger, tracker: T, widget: W): void {
     if (debug.model && !this.handlers[widget.id]) {
-      const handler = new this.builder({
+      this.handlers[widget.id] = new this.builder({
         tracker: tracker,
-        debuggerService: debug
+        debuggerService: debug,
+        id: widget.id
       });
-      this.handlers[widget.id] = handler;
-      widget.disposed.connect(() => {
+      widget.disposed.connect(async () => {
+        this.handlers[widget.id].dispose();
         delete this.handlers[widget.id];
-        handler.dispose();
       });
     }
   }

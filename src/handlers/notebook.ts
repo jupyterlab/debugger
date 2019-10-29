@@ -23,6 +23,7 @@ export class DebuggerNotebookHandler implements IDisposable {
     this.debuggerService = options.debuggerService;
     this.notebookTracker = options.tracker;
     this.breakpoints = this.debuggerModel.breakpointsModel;
+    this.id = options.id;
     this.notebookTracker.activeCellChanged.connect(this.onNewCell, this);
     this.cellManager = new CellManager({
       breakpointsModel: this.breakpoints,
@@ -38,6 +39,7 @@ export class DebuggerNotebookHandler implements IDisposable {
   private debuggerService: IDebugger;
   private breakpoints: Breakpoints.Model;
   private cellManager: CellManager;
+  private id: string;
   isDisposed: boolean;
 
   dispose(): void {
@@ -46,22 +48,26 @@ export class DebuggerNotebookHandler implements IDisposable {
     }
     this.isDisposed = true;
     this.cellManager.dispose();
-    this.notebookTracker.activeCellChanged.disconnect(this.onNewCell);
     Signal.clearData(this);
   }
 
   protected onNewCell(noteTracker: NotebookTracker, codeCell: CodeCell) {
-    if (this.cellManager) {
-      this.cellManager.activeCell = codeCell;
-    } else {
-      this.cellManager = new CellManager({
-        breakpointsModel: this.breakpoints,
-        activeCell: codeCell,
-        debuggerModel: this.debuggerModel,
-        debuggerService: this.debuggerService,
-        type: 'notebook'
-      });
-    }
+    // need timeout casue after dispose apear bad render problem
+    setTimeout(() => {
+      if (noteTracker.currentWidget.id === this.id) {
+        if (this.cellManager) {
+          this.cellManager.activeCell = codeCell;
+        } else {
+          this.cellManager = new CellManager({
+            breakpointsModel: this.breakpoints,
+            activeCell: codeCell,
+            debuggerModel: this.debuggerModel,
+            debuggerService: this.debuggerService,
+            type: 'notebook'
+          });
+        }
+      }
+    });
   }
 }
 
@@ -69,5 +75,6 @@ export namespace DebuggerNotebookHandler {
   export interface IOptions {
     debuggerService: IDebugger;
     tracker: INotebookTracker;
+    id: string;
   }
 }
