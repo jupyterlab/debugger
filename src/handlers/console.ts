@@ -3,16 +3,18 @@
 
 import { CodeConsole, IConsoleTracker } from '@jupyterlab/console';
 
-import { CellManager } from '../handlers/cell';
-
 import { CodeCell } from '@jupyterlab/cells';
+
+import { IDisposable } from '@phosphor/disposable';
+
+import { Signal } from '@phosphor/signaling';
 
 import { Breakpoints } from '../breakpoints';
 
+import { CellManager } from '../handlers/cell';
+
 import { IDebugger } from '../tokens';
 
-import { IDisposable } from '@phosphor/disposable';
-import { Signal } from '@phosphor/signaling';
 import { Debugger } from '../debugger';
 
 export class DebuggerConsoleHandler implements IDisposable {

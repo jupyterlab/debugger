@@ -5,15 +5,17 @@ import { CodeCell } from '@jupyterlab/cells';
 
 import { CodeMirrorEditor } from '@jupyterlab/codemirror';
 
-import { Doc, Editor } from 'codemirror';
+import { IDisposable } from '@phosphor/disposable';
+
+import { Signal } from '@phosphor/signaling';
 
 import { Breakpoints, SessionTypes } from '../breakpoints';
 
-import { IDisposable } from '@phosphor/disposable';
-import { Debugger } from '../debugger';
-import { IDebugger } from '../tokens';
+import { Doc, Editor } from 'codemirror';
 
-import { Signal } from '@phosphor/signaling';
+import { Debugger } from '../debugger';
+
+import { IDebugger } from '../tokens';
 
 const LINE_HIGHLIGHT_CLASS = 'jp-breakpoint-line-highlight';
 

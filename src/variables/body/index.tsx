@@ -1,14 +1,15 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { Variables } from '../index';
-
-import { ITheme, ObjectInspector, ObjectLabel } from 'react-inspector';
-
 import { ReactWidget } from '@jupyterlab/apputils';
 
 import { ArrayExt } from '@phosphor/algorithm';
+
 import React, { useEffect, useState } from 'react';
+
+import { ITheme, ObjectInspector, ObjectLabel } from 'react-inspector';
+
+import { Variables } from '../index';
 
 export class Body extends ReactWidget {
   constructor(model: Variables.Model) {

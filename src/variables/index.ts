@@ -3,11 +3,11 @@
 
 import { Panel, PanelLayout, Widget } from '@phosphor/widgets';
 
-import { Body } from './body';
-
 import { ISignal, Signal } from '@phosphor/signaling';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
+
+import { Body } from './body';
 
 export class Variables extends Panel {
   constructor(options: Variables.IOptions) {

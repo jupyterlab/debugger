@@ -3,11 +3,11 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Callstack } from '.';
-
 import { ReactWidget } from '@jupyterlab/apputils';
 
 import { ArrayExt } from '@phosphor/algorithm';
+
+import { Callstack } from '.';
 
 export class Body extends ReactWidget {
   constructor(model: Callstack.Model) {
