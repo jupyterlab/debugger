@@ -117,7 +117,6 @@ export class CellManager implements IDisposable {
     ) {
       if (this.previousCell && !this.previousCell.isDisposed) {
         this.removeListener(this.previousCell);
-        this.clearGutter(this.previousCell);
         this.breakpointsModel.breakpoints = [];
       }
       this.previousCell = this.activeCell;
@@ -134,6 +133,15 @@ export class CellManager implements IDisposable {
 
     this.previousLineCount = editor.lineCount;
 
+    const editorBreakpoints = this.getBreakpointsInfo(cell);
+    editorBreakpoints.forEach(info => {
+      this.breakpointsModel.addBreakpoint(
+        this._debuggerService.session.client.name,
+        this.getEditorId(),
+        info
+      );
+    });
+
     editor.setOption('lineNumbers', true);
     editor.editor.setOption('gutters', [
       'CodeMirror-linenumbers',
@@ -146,7 +154,6 @@ export class CellManager implements IDisposable {
 
   protected removeListener(cell: CodeCell) {
     const editor = cell.editor as CodeMirrorEditor;
-    editor.setOption('lineNumbers', false);
     editor.editor.off('gutterClick', this.onGutterClick);
     editor.editor.off('renderLine', this.onNewRenderLine);
   }
@@ -168,14 +175,14 @@ export class CellManager implements IDisposable {
       this.breakpointsModel.addBreakpoint(
         this._debuggerService.session.client.name,
         this.getEditorId(),
-        info as ILineInfo
+        info
       );
     }
 
     editor.setGutterMarker(
       lineNumber,
       'breakpoints',
-      isRemoveGutter ? null : this.createMarkerNode()
+      isRemoveGutter ? null : Private.createMarkerNode()
     );
   };
 
@@ -198,11 +205,16 @@ export class CellManager implements IDisposable {
     }
   };
 
-  private createMarkerNode() {
-    let marker = document.createElement('div');
-    marker.className = 'jp-breakpoint-marker';
-    marker.innerHTML = '●';
-    return marker;
+  private getBreakpointsInfo(cell: CodeCell): ILineInfo[] {
+    const editor = cell.editor as CodeMirrorEditor;
+    let lines = [];
+    for (let i = 0; i < editor.doc.lineCount(); i++) {
+      const info = editor.editor.lineInfo(i);
+      if (info.gutterMarkers) {
+        lines.push(info);
+      }
+    }
+    return lines;
   }
 
   private _previousCell: CodeCell;
@@ -235,4 +247,13 @@ export interface ILineInfo {
   wrapClass: string;
   /** Array of line widgets attached to this line. */
   widgets: any;
+}
+
+namespace Private {
+  export function createMarkerNode() {
+    let marker = document.createElement('div');
+    marker.className = 'jp-breakpoint-marker';
+    marker.innerHTML = '●';
+    return marker;
+  }
 }

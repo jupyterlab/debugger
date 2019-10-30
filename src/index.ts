@@ -242,10 +242,6 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
 
     let widget: MainAreaWidget<Debugger>;
 
-    const getModel = () => {
-      return tracker.currentWidget ? tracker.currentWidget.content.model : null;
-    };
-
     commands.addCommand(CommandIDs.mount, {
       execute: args => {
         if (!widget) {
@@ -334,18 +330,6 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
       },
       execute: async () => {
         await service.stepIn();
-      }
-    });
-
-    commands.addCommand(CommandIDs.debugNotebook, {
-      label: 'Launch',
-      isEnabled: () => {
-        return service.isStarted();
-      },
-      execute: async () => {
-        await tracker.currentWidget.content.service.launch(
-          getModel().codeValue.text
-        );
       }
     });
 
