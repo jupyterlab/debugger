@@ -52,7 +52,7 @@ export class DebuggerNotebookHandler implements IDisposable {
   }
 
   protected onNewCell(noteTracker: NotebookTracker, codeCell: CodeCell) {
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       if (noteTracker.currentWidget.id === this.id) {
         if (this.cellManager) {
           this.cellManager.activeCell = codeCell;
