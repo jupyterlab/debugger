@@ -14,6 +14,7 @@ import { Debugger } from '../debugger';
 import { IDebugger } from '../tokens';
 
 import { IDisposable } from '@phosphor/disposable';
+import { Signal } from '@phosphor/signaling';
 
 const LINE_HIGHLIGHT_CLASS = 'jp-breakpoint-line-highlight';
 
@@ -23,14 +24,6 @@ export class CellManager implements IDisposable {
     this._debuggerService = options.debuggerService;
     this.breakpointsModel = options.breakpointsModel;
     this.activeCell = options.activeCell;
-    this._type = options.type;
-
-    this.breakpointsModel.clearedBreakpoints.connect((_, type) => {
-      if (type !== this._type) {
-        return;
-      }
-      this.clearGutter(this.activeCell);
-    });
 
     this._debuggerModel.currentLineChanged.connect((_, lineNumber) => {
       this.showCurrentLine(lineNumber);
@@ -41,7 +34,10 @@ export class CellManager implements IDisposable {
     });
 
     this.breakpointsModel.breakpointsChanged.connect(async () => {
-      await this._debuggerService.updateBreakpoints();
+      if (this.activeCell && this.activeCell.inputArea) {
+        this.addBreakpointsToEditor(this.activeCell);
+        await this._debuggerService.updateBreakpoints();
+      }
     });
   }
 
@@ -76,6 +72,7 @@ export class CellManager implements IDisposable {
     }
     this.removeListener(this.activeCell);
     this.cleanupHighlight();
+    Signal.clearData(this);
   }
 
   set previousCell(cell: CodeCell) {
@@ -117,7 +114,6 @@ export class CellManager implements IDisposable {
     ) {
       if (this.previousCell && !this.previousCell.isDisposed) {
         this.removeListener(this.previousCell);
-        this.breakpointsModel.breakpoints = [];
       }
       this.previousCell = this.activeCell;
       this.setEditor(this.activeCell);
@@ -133,14 +129,14 @@ export class CellManager implements IDisposable {
 
     this.previousLineCount = editor.lineCount;
 
-    const editorBreakpoints = this.getBreakpointsInfo(cell);
-    editorBreakpoints.forEach(info => {
-      this.breakpointsModel.addBreakpoint(
+    const editorBreakpoints = this.getBreakpointsInfo(cell).map(lineInfo => {
+      return Private.createBreakpoint(
         this._debuggerService.session.client.name,
         this.getEditorId(),
-        info
+        lineInfo.line + 1
       );
     });
+    this._debuggerModel.breakpointsModel.breakpoints = editorBreakpoints;
 
     editor.setOption('lineNumbers', true);
     editor.editor.setOption('gutters', [
@@ -170,20 +166,16 @@ export class CellManager implements IDisposable {
 
     const isRemoveGutter = !!info.gutterMarkers;
     if (isRemoveGutter) {
-      this.breakpointsModel.removeBreakpoint(info as ILineInfo);
+      this.breakpointsModel.removeBreakpointAtLine(info.line + 1);
     } else {
       this.breakpointsModel.addBreakpoint(
-        this._debuggerService.session.client.name,
-        this.getEditorId(),
-        info
+        Private.createBreakpoint(
+          this._debuggerService.session.client.name,
+          this.getEditorId(),
+          info.line + 1
+        )
       );
     }
-
-    editor.setGutterMarker(
-      lineNumber,
-      'breakpoints',
-      isRemoveGutter ? null : Private.createMarkerNode()
-    );
   };
 
   protected onNewRenderLine = (editor: Editor, line: any) => {
@@ -194,16 +186,30 @@ export class CellManager implements IDisposable {
     const doc: Doc = editor.getDoc();
     const linesNumber = doc.lineCount();
     if (this.previousLineCount !== linesNumber) {
-      let lines: ILineInfo[] = [];
+      let lines: number[] = [];
       doc.eachLine(line => {
         if ((line as ILineInfo).gutterMarkers) {
-          lines.push(editor.lineInfo(line));
+          const lineInfo = editor.lineInfo(line);
+          lines.push(lineInfo.line + 1);
         }
       });
       this.breakpointsModel.changeLines(lines);
       this.previousLineCount = linesNumber;
     }
   };
+
+  private addBreakpointsToEditor(cell: CodeCell) {
+    this.clearGutter(cell);
+    const editor = cell.editor as CodeMirrorEditor;
+    const breakpoints = this._debuggerModel.breakpointsModel.breakpoints;
+    breakpoints.forEach(breakpoint => {
+      editor.editor.setGutterMarker(
+        breakpoint.line - 1,
+        'breakpoints',
+        Private.createMarkerNode()
+      );
+    });
+  }
 
   private getBreakpointsInfo(cell: CodeCell): ILineInfo[] {
     const editor = cell.editor as CodeMirrorEditor;
@@ -220,7 +226,6 @@ export class CellManager implements IDisposable {
   private _previousCell: CodeCell;
   private previousLineCount: number;
   private _debuggerModel: Debugger.Model;
-  private _type: SessionTypes;
   private breakpointsModel: Breakpoints.Model;
   private _activeCell: CodeCell;
   private _debuggerService: IDebugger;
@@ -255,5 +260,20 @@ namespace Private {
     marker.className = 'jp-breakpoint-marker';
     marker.innerHTML = '●';
     return marker;
+  }
+
+  export function createBreakpoint(
+    session: string,
+    type: string,
+    line: number
+  ) {
+    return {
+      line,
+      active: true,
+      verified: true,
+      source: {
+        name: session
+      }
+    };
   }
 }

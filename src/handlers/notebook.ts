@@ -52,7 +52,6 @@ export class DebuggerNotebookHandler implements IDisposable {
   }
 
   protected onNewCell(noteTracker: NotebookTracker, codeCell: CodeCell) {
-    // need timeout casue after dispose apear bad render problem
     setTimeout(() => {
       if (noteTracker.currentWidget.id === this.id) {
         if (this.cellManager) {
