@@ -266,7 +266,6 @@ namespace Private {
     marker.innerHTML = '●';
     return marker;
   }
-
   export function createBreakpoint(
     session: string,
     type: string,
