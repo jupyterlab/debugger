@@ -23,7 +23,6 @@ export class Body extends ReactWidget {
 
 const BreakpointsComponent = ({ model }: { model: Breakpoints.Model }) => {
   const [breakpoints, setBreakpoints] = useState(model.breakpoints);
-
   useEffect(() => {
     const updateBreakpoints = (
       _: Breakpoints.Model,
@@ -98,7 +97,7 @@ const BreakpointComponent = ({
         checked={active}
       />
       <span>
-        {breakpoint.source.name} : {breakpoint.line}
+        {breakpoint.source.path} : {breakpoint.line}
       </span>
     </div>
   );
