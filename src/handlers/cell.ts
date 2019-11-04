@@ -10,7 +10,9 @@ import { Doc, Editor } from 'codemirror';
 import { Breakpoints, SessionTypes } from '../breakpoints';
 
 import { IDisposable } from '@phosphor/disposable';
+
 import { Debugger } from '../debugger';
+
 import { IDebugger } from '../tokens';
 
 import { Signal } from '@phosphor/signaling';
@@ -25,17 +27,20 @@ export class CellManager implements IDisposable {
     this.activeCell = options.activeCell;
     this.onActiveCellChanged();
 
-    this._debuggerModel.currentLineChanged.connect((_, lineNumber) => {
-      this.showCurrentLine(lineNumber);
-    });
-
-    this._debuggerModel.linesCleared.connect(() => {
+    this._debuggerModel.variablesModel.changed.connect(() => {
       this.cleanupHighlight();
+      const firstFrame = this._debuggerModel.callstackModel.frames[0];
+      if (!firstFrame) {
+        return;
+      }
+      this.showCurrentLine(firstFrame.line);
     });
 
-    this.breakpointsModel.breakpointsChanged.connect(async () => {
+    this.breakpointsModel.changed.connect(async () => {
+      if (!this.activeCell || this.activeCell.isDisposed) {
+        return;
+      }
       this.addBreakpointsToEditor(this.activeCell);
-      await this._debuggerService.updateBreakpoints();
     });
   }
 
@@ -134,7 +139,8 @@ export class CellManager implements IDisposable {
         lineInfo.line + 1
       );
     });
-    this._debuggerModel.breakpointsModel.breakpoints = editorBreakpoints;
+
+    void this._debuggerService.updateBreakpoints(editorBreakpoints);
 
     editor.setOption('lineNumbers', true);
     editor.editor.setOption('gutters', [
@@ -163,10 +169,11 @@ export class CellManager implements IDisposable {
     }
 
     const isRemoveGutter = !!info.gutterMarkers;
+    let breakpoints = this.breakpointsModel.breakpoints;
     if (isRemoveGutter) {
-      this.breakpointsModel.removeBreakpointAtLine(info.line + 1);
+      breakpoints = breakpoints.filter(ele => ele.line !== info.line + 1);
     } else {
-      this.breakpointsModel.addBreakpoint(
+      breakpoints.push(
         Private.createBreakpoint(
           this._debuggerService.session.client.name,
           this.getEditorId(),
@@ -174,6 +181,8 @@ export class CellManager implements IDisposable {
         )
       );
     }
+
+    void this._debuggerService.updateBreakpoints(breakpoints);
   };
 
   protected onNewRenderLine = (editor: Editor, line: any) => {
@@ -259,7 +268,6 @@ namespace Private {
     marker.innerHTML = '●';
     return marker;
   }
-
   export function createBreakpoint(
     session: string,
     type: string,

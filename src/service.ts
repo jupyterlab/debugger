@@ -13,6 +13,8 @@ import { IDebugger } from './tokens';
 
 import { Variables } from './variables';
 
+import { Breakpoints } from './breakpoints';
+
 import { Callstack } from './callstack';
 
 export class DebugService implements IDebugger {
@@ -156,7 +158,6 @@ export class DebugService implements IDebugger {
       });
       if (index === 0) {
         this._model.variablesModel.scopes = values;
-        this._model.currentLineChanged.emit(frame.line);
       }
     });
 
@@ -207,38 +208,53 @@ export class DebugService implements IDebugger {
     return reply.body.variables;
   };
 
-  getBreakpoints = (): DebugProtocol.SourceBreakpoint[] => {
-    return this._model.breakpointsModel.breakpoints.map(breakpoint => {
-      return {
-        line: breakpoint.line
-      };
-    });
-  };
-
   setBreakpoints = async (
     breakpoints: DebugProtocol.SourceBreakpoint[],
     path: string
   ) => {
     // Workaround: this should not be called before the session has started
-    const client = this.session.client as IClientSession;
-    await client.ready;
-    await this.session.sendRequest('setBreakpoints', {
+    await this.ensureSessionReady();
+    return await this.session.sendRequest('setBreakpoints', {
       breakpoints: breakpoints,
       source: { path },
       sourceModified: false
     });
   };
 
-  updateBreakpoints = async () => {
+  updateBreakpoints = async (breakpoints: Breakpoints.IBreakpoint[]) => {
     if (!this.session.isStarted) {
       return;
     }
+    // Workaround: this should not be called before the session has started
+    await this.ensureSessionReady();
     const code = this._model.codeValue.text;
     const dumpedCell = await this.dumpCell(code);
-    const breakpoints = this.getBreakpoints();
-    await this.setBreakpoints(breakpoints, dumpedCell.sourcePath);
+    const sourceBreakpoints = Private.toSourceBreakpoints(breakpoints);
+    const reply = await this.setBreakpoints(
+      sourceBreakpoints,
+      dumpedCell.sourcePath
+    );
+    let kernelBreakpoints = reply.body.breakpoints.map(breakpoint => {
+      return {
+        ...breakpoint,
+        active: true,
+        source: { path: this.session.client.name }
+      };
+    });
+
+    // filter breakpoints with the same line number
+    kernelBreakpoints = kernelBreakpoints.filter(
+      (breakpoint, i, arr) =>
+        arr.findIndex(el => el.line === breakpoint.line) === i
+    );
+    this._model.breakpointsModel.breakpoints = kernelBreakpoints;
     await this.session.sendRequest('configurationDone', {});
   };
+
+  private async ensureSessionReady(): Promise<void> {
+    const client = this.session.client as IClientSession;
+    return client.ready;
+  }
 
   protected convertScope = (
     scopes: DebugProtocol.Scope[],
@@ -258,7 +274,6 @@ export class DebugService implements IDebugger {
   };
 
   private onContinued() {
-    this._model.linesCleared.emit();
     this._model.callstackModel.frames = [];
     this._model.variablesModel.scopes = [];
   }
@@ -273,7 +288,10 @@ export class DebugService implements IDebugger {
   private _sessionChanged = new Signal<IDebugger, IDebugger.ISession>(this);
   private _eventMessage = new Signal<IDebugger, IDebugger.ISession.Event>(this);
   private _model: Debugger.Model;
+
+  // TODO: remove frames from the service
   private frames: Frame[] = [];
+
   // TODO: move this in model
   private _threadStopped = new Set();
 }
@@ -282,3 +300,13 @@ export type Frame = {
   id: number;
   scopes: Variables.IScope[];
 };
+
+namespace Private {
+  export function toSourceBreakpoints(breakpoints: Breakpoints.IBreakpoint[]) {
+    return breakpoints.map(breakpoint => {
+      return {
+        line: breakpoint.line
+      };
+    });
+  }
+}

@@ -6,12 +6,14 @@ import { Toolbar, ToolbarButton } from '@jupyterlab/apputils';
 import { Signal } from '@phosphor/signaling';
 import { Panel, PanelLayout, Widget } from '@phosphor/widgets';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { IDebugger } from '../tokens';
 import { Body } from './body';
 
 export class Breakpoints extends Panel {
   constructor(options: Breakpoints.IOptions) {
     super();
     this.model = options.model;
+    this.service = options.service;
     this.addClass('jp-DebuggerBreakpoints');
     this.title.label = 'Breakpoints';
 
@@ -41,7 +43,7 @@ export class Breakpoints extends Panel {
       new ToolbarButton({
         iconClassName: 'jp-CloseAllIcon',
         onClick: () => {
-          this.model.removeAllBreakpoints();
+          void this.service.updateBreakpoints([]);
         },
         tooltip: 'Remove All Breakpoints'
       })
@@ -51,6 +53,7 @@ export class Breakpoints extends Panel {
   private isAllActive = true;
   readonly body: Widget;
   readonly model: Breakpoints.Model;
+  readonly service: IDebugger;
 }
 
 class BreakpointsHeader extends Widget {
@@ -79,7 +82,7 @@ export namespace Breakpoints {
       this._breakpoints = model;
     }
 
-    breakpointsChanged = new Signal<this, IBreakpoint[]>(this);
+    changed = new Signal<this, IBreakpoint[]>(this);
 
     get breakpoints(): IBreakpoint[] {
       return this._breakpoints;
@@ -91,7 +94,7 @@ export namespace Breakpoints {
 
     set breakpoints(breakpoints: IBreakpoint[]) {
       this._breakpoints = [...breakpoints];
-      this.breakpointsChanged.emit(this._breakpoints);
+      this.changed.emit(this._breakpoints);
     }
 
     set breakpoint(breakpoint: IBreakpoint) {
@@ -106,10 +109,6 @@ export namespace Breakpoints {
       }
     }
 
-    addBreakpoint(breakpoint: IBreakpoint) {
-      this.breakpoints = [...this._breakpoints, breakpoint];
-    }
-
     set type(newType: SessionTypes) {
       if (newType === this._selectedType) {
         return;
@@ -117,15 +116,6 @@ export namespace Breakpoints {
       this._state[this._selectedType] = this.breakpoints;
       this._selectedType = newType;
       this.breakpoints = this._state[newType];
-    }
-
-    removeBreakpointAtLine(line: number) {
-      const breakpoints = this.breakpoints.filter(ele => ele.line !== line);
-      this.breakpoints = breakpoints;
-    }
-
-    removeAllBreakpoints() {
-      this.breakpoints = [];
     }
 
     changeLines(lines: number[]) {
@@ -158,6 +148,7 @@ export namespace Breakpoints {
    */
   export interface IOptions extends Panel.IOptions {
     model: Model;
+    service: IDebugger;
   }
 }
 
