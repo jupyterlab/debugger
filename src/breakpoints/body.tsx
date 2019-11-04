@@ -2,7 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { ReactWidget } from '@jupyterlab/apputils';
-import { ArrayExt } from '@phosphor/algorithm';
+// import { ArrayExt } from '@phosphor/algorithm';
 import { ISignal } from '@phosphor/signaling';
 import React, { useEffect, useState } from 'react';
 import { Breakpoints } from '.';
@@ -29,10 +29,10 @@ const BreakpointsComponent = ({ model }: { model: Breakpoints.Model }) => {
       _: Breakpoints.Model,
       updates: Breakpoints.IBreakpoint[]
     ) => {
-      if (ArrayExt.shallowEqual(breakpoints, updates)) {
+      /*if (ArrayExt.shallowEqual(breakpoints, updates)) {
         return;
-      }
-      setBreakpoints(updates);
+      }*/
+      setBreakpoints(model.breakpoints);
     };
 
     model.changed.connect(updateBreakpoints);
@@ -42,6 +42,43 @@ const BreakpointsComponent = ({ model }: { model: Breakpoints.Model }) => {
     };
   });
 
+  return (
+    <div>
+      {Array.from(breakpoints.entries()).map(entry => (
+        // breakpoints.forEach((val, key, m) => (
+        <BreakpointCellComponent
+          key={entry[0]}
+          breakpoints={entry[1]}
+          model={model}
+        />
+      ))}
+    </div>
+  );
+
+  /*return (
+    <div>
+      {breakpoints
+        .sort((a, b) => {
+          return a.line - b.line;
+        })
+        .map((breakpoint: Breakpoints.IBreakpoint) => (
+          <BreakpointComponent
+            key={breakpoint.line}
+            breakpoint={breakpoint}
+            breakpointChanged={model.breakpointChanged}
+          />
+        ))}
+    </div>
+  );*/
+};
+
+const BreakpointCellComponent = ({
+  breakpoints,
+  model
+}: {
+  breakpoints: Breakpoints.IBreakpoint[];
+  model: Breakpoints.Model;
+}) => {
   return (
     <div>
       {breakpoints

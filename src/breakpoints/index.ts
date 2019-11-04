@@ -5,6 +5,7 @@ import { Toolbar, ToolbarButton } from '@jupyterlab/apputils';
 
 import { Signal } from '@phosphor/signaling';
 import { Panel, PanelLayout, Widget } from '@phosphor/widgets';
+import { murmur2 } from 'murmurhash-js';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugger } from '../tokens';
 import { Body } from './body';
@@ -77,7 +78,7 @@ export namespace Breakpoints {
     active: boolean;
   }
 
-  export class Model {
+  /*export class Model {
     constructor(model: IBreakpoint[]) {
       this._breakpoints = model;
     }
@@ -141,6 +142,58 @@ export namespace Breakpoints {
       console: [] as Breakpoints.IBreakpoint[],
       notebook: [] as Breakpoints.IBreakpoint[]
     };
+  }*/
+
+  export class Model {
+    setHashParameters(method: string, seed: number) {
+      if (method === 'Murmur2') {
+        this._hashMethod = (code: string) => {
+          return murmur2(code, seed).toString();
+        };
+      } else {
+        throw new Error('hash method not supported ' + method);
+      }
+    }
+
+    get changed(): Signal<this, IBreakpoint[]> {
+      return this._changed;
+    }
+
+    get restored(): Signal<this, string> {
+      return this._restored;
+    }
+
+    get breakpoints(): Map<string, IBreakpoint[]> {
+      return this._breakpoints;
+    }
+
+    get breakpointChanged(): Signal<this, IBreakpoint> {
+      return this._breakpointChanged;
+    }
+
+    hash(code: string): string {
+      return this._hashMethod(code);
+    }
+
+    setBreakpoints(code: string, breakpoints: IBreakpoint[]) {
+      this._breakpoints.set(this.hash(code), breakpoints);
+      this.changed.emit(breakpoints);
+    }
+
+    getBreakpoints(code: string): IBreakpoint[] {
+      return this._breakpoints.get(this.hash(code));
+    }
+
+    restoreBreakpoints(breakpoints: Map<string, IBreakpoint[]>) {
+      this._breakpoints = breakpoints;
+      this._restored.emit('restored');
+    }
+
+    private _hashMethod: (code: string) => string;
+    private _breakpoints = new Map<string, IBreakpoint[]>();
+    private _changed = new Signal<this, IBreakpoint[]>(this);
+    private _restored = new Signal<this, string>(this);
+    private _breakpointChanged = new Signal<this, IBreakpoint>(this);
   }
 
   /**
