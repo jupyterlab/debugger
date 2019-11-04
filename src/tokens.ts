@@ -71,6 +71,11 @@ export interface IDebugger {
   stop(): Promise<void>;
 
   /**
+   * Restore the state of a debug session.
+   */
+  restoreState(autoStart: boolean): Promise<void>;
+
+  /**
    * Continues the execution of the current thread.
    */
   continue(): Promise<void>;
@@ -147,7 +152,7 @@ export namespace IDebugger {
     /**
      * Restore the state of a debug session.
      */
-    restoreState(): Promise<void>;
+    restoreState(): Promise<IDebugger.ISession.Response['debugInfo']>;
 
     /**
      * Send a debug request to the kernel.
@@ -202,6 +207,8 @@ export namespace IDebugger {
         isStarted: boolean;
         hashMethod: string;
         hashSeed: number;
+        tmp_file_prefix: string;
+        tmp_file_suffix: string;
         breakpoints: IDebugInfoBreakpoints[];
       };
     }

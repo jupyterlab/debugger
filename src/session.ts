@@ -138,13 +138,15 @@ export class DebugSession implements IDebugger.ISession {
   /**
    * Restore the state of a debug session.
    */
-  async restoreState(): Promise<void> {
+  async restoreState(): Promise<IDebugger.ISession.Response['debugInfo']> {
     await this.client.ready;
     try {
       const message = await this.sendRequest('debugInfo', {});
       this._isStarted = message.body.isStarted;
+      return message;
     } catch (err) {
       console.error('Error: ', err.message);
+      return null;
     }
   }
 

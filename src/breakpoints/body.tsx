@@ -22,30 +22,35 @@ export class Body extends ReactWidget {
 }
 
 const BreakpointsComponent = ({ model }: { model: Breakpoints.Model }) => {
-  const [breakpoints, setBreakpoints] = useState(model.breakpoints);
+  const [breakpoints, setBreakpoints] = useState(
+    Array.from(model.breakpoints.entries())
+  );
 
   useEffect(() => {
     const updateBreakpoints = (
       _: Breakpoints.Model,
       updates: Breakpoints.IBreakpoint[]
     ) => {
-      /*if (ArrayExt.shallowEqual(breakpoints, updates)) {
-        return;
-      }*/
-      setBreakpoints(model.breakpoints);
+      setBreakpoints(Array.from(model.breakpoints.entries()));
+    };
+
+    const restoreBreakpoints = (_: Breakpoints.Model) => {
+      setBreakpoints(Array.from(model.breakpoints.entries()));
     };
 
     model.changed.connect(updateBreakpoints);
+    model.restored.connect(restoreBreakpoints);
 
     return () => {
       model.changed.disconnect(updateBreakpoints);
+      model.restored.disconnect(restoreBreakpoints);
     };
   });
 
   return (
     <div>
-      {Array.from(breakpoints.entries()).map(entry => (
-        // breakpoints.forEach((val, key, m) => (
+      {breakpoints.map(entry => (
+        // Array.from(breakpoints.entries()).map((entry) => (
         <BreakpointCellComponent
           key={entry[0]}
           breakpoints={entry[1]}
@@ -54,22 +59,6 @@ const BreakpointsComponent = ({ model }: { model: Breakpoints.Model }) => {
       ))}
     </div>
   );
-
-  /*return (
-    <div>
-      {breakpoints
-        .sort((a, b) => {
-          return a.line - b.line;
-        })
-        .map((breakpoint: Breakpoints.IBreakpoint) => (
-          <BreakpointComponent
-            key={breakpoint.line}
-            breakpoint={breakpoint}
-            breakpointChanged={model.breakpointChanged}
-          />
-        ))}
-    </div>
-  );*/
 };
 
 const BreakpointCellComponent = ({
@@ -87,7 +76,7 @@ const BreakpointCellComponent = ({
         })
         .map((breakpoint: Breakpoints.IBreakpoint) => (
           <BreakpointComponent
-            key={breakpoint.line}
+            key={breakpoint.source.path + breakpoint.line}
             breakpoint={breakpoint}
             breakpointChanged={model.breakpointChanged}
           />

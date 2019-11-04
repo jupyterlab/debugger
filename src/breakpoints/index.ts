@@ -31,10 +31,13 @@ export class Breakpoints extends Panel {
         tooltip: `${this.isAllActive ? 'Deactivate' : 'Activate'} Breakpoints`,
         onClick: () => {
           this.isAllActive = !this.isAllActive;
-          this.model.breakpoints.map((breakpoint: Breakpoints.IBreakpoint) => {
-            breakpoint.active = this.isAllActive;
-            this.model.breakpoint = breakpoint;
-          });
+          // TODO: this requires a set breakpoint(bp: Breakpoints.IBreakpoint[]) method in the model
+          /*Array.from(this.model.breakpoints.values()).map((breakpoints: Breakpoints.IBreakpoint[]) => {
+            breakpoints.map((breakpoint: Breakpoints.IBreakpoint) => {
+              breakpoint.active = this.isAllActive;
+              this.model.breakpoint = breakpoint;
+            });
+          });*/
         }
       })
     );
@@ -159,7 +162,7 @@ export namespace Breakpoints {
       return this._changed;
     }
 
-    get restored(): Signal<this, string> {
+    get restored(): Signal<this, void> {
       return this._restored;
     }
 
@@ -167,6 +170,7 @@ export namespace Breakpoints {
       return this._breakpoints;
     }
 
+    // kept for react component
     get breakpointChanged(): Signal<this, IBreakpoint> {
       return this._breakpointChanged;
     }
@@ -181,18 +185,26 @@ export namespace Breakpoints {
     }
 
     getBreakpoints(code: string): IBreakpoint[] {
-      return this._breakpoints.get(this.hash(code));
+      return this._breakpoints.get(this.hash(code)) || [];
     }
 
     restoreBreakpoints(breakpoints: Map<string, IBreakpoint[]>) {
       this._breakpoints = breakpoints;
-      this._restored.emit('restored');
+      this._restored.emit();
     }
+
+    /*private printMap() {
+      this._breakpoints.forEach((value, key, map) => {
+        console.log(key);
+        value.forEach((bp) => console.log(bp.line));
+      });
+    }*/
 
     private _hashMethod: (code: string) => string;
     private _breakpoints = new Map<string, IBreakpoint[]>();
     private _changed = new Signal<this, IBreakpoint[]>(this);
-    private _restored = new Signal<this, string>(this);
+    private _restored = new Signal<this, void>(this);
+    // kept for react component
     private _breakpointChanged = new Signal<this, IBreakpoint>(this);
   }
 

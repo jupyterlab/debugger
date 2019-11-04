@@ -107,6 +107,40 @@ export class DebugService implements IDebugger {
     await this.session.stop();
   }
 
+  async restoreState(autoStart: boolean): Promise<void> {
+    if (this._model !== null && this._session !== null) {
+      const reply = await this._session.restoreState();
+      this._model.breakpointsModel.setHashParameters(
+        reply.body.hashMethod,
+        reply.body.hashSeed
+      );
+      const breakpoints = reply.body.breakpoints;
+      let bpMap = new Map<string, Breakpoints.IBreakpoint[]>();
+      if (breakpoints.length !== 0) {
+        const prefix = reply.body.tmp_file_prefix;
+        const suffix = reply.body.tmp_file_suffix;
+        breakpoints.forEach((bp: IDebugger.ISession.IDebugInfoBreakpoints) => {
+          let id = bp.source.replace(prefix + '/', '').replace(suffix, '');
+          bpMap.set(
+            id,
+            bp.lines.map((l: number) => {
+              return {
+                source: { path: bp.source },
+                line: l,
+                verified: true,
+                active: true
+              };
+            })
+          );
+        });
+      }
+      this._model.breakpointsModel.restoreBreakpoints(bpMap);
+      if (!this._session.isStarted && autoStart) {
+        await this._session.start();
+      }
+    }
+  }
+
   async continue(): Promise<void> {
     try {
       await this.session.sendRequest('continue', {
@@ -252,7 +286,7 @@ export class DebugService implements IDebugger {
       (breakpoint, i, arr) =>
         arr.findIndex(el => el.line === breakpoint.line) === i
     );
-    this._model.breakpointsModel.breakpoints = kernelBreakpoints;
+    this._model.breakpointsModel.setBreakpoints(code, kernelBreakpoints);
     await this.session.sendRequest('configurationDone', {});
   };
 
