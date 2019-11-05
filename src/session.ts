@@ -45,9 +45,9 @@ export class DebugSession implements IDebugger.ISession {
       return;
     }
 
-    if (this._client) {
+    /*if (this._client) {
       Signal.clearData(this._client);
-    }
+    }*/
 
     this._client = client;
 
