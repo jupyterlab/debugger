@@ -39,6 +39,7 @@ import { DebugService } from './service';
 
 import { DebugSession } from './session';
 
+import { Breakpoints } from './breakpoints';
 import { IDebugger } from './tokens';
 
 /**
@@ -103,6 +104,10 @@ class DebuggerHandler<H extends ConsoleHandler | NotebookHandler> {
       widget.disposed.connect(() => {
         handler.dispose();
         delete this.handlers[widget.id];
+        if (Object.keys(this.handlers).length === 0) {
+          const emptyMap = new Map<string, Breakpoints.IBreakpoint[]>();
+          debug.model.breakpointsModel.restoreBreakpoints(emptyMap);
+        }
       });
     }
   }
