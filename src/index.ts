@@ -85,6 +85,11 @@ async function setDebugSession(
   app.commands.notifyCommandChanged();
 }
 
+function clearBreakpoints(debug: IDebugger) {
+  const emptyMap = new Map<string, Breakpoints.IBreakpoint[]>();
+  debug.model.breakpointsModel.restoreBreakpoints(emptyMap);
+}
+
 class DebuggerHandler<H extends ConsoleHandler | NotebookHandler> {
   constructor(builder: new (option: any) => H) {
     this.builder = builder;
@@ -105,8 +110,7 @@ class DebuggerHandler<H extends ConsoleHandler | NotebookHandler> {
         handler.dispose();
         delete this.handlers[widget.id];
         if (Object.keys(this.handlers).length === 0) {
-          const emptyMap = new Map<string, Breakpoints.IBreakpoint[]>();
-          debug.model.breakpointsModel.restoreBreakpoints(emptyMap);
+          clearBreakpoints(debug);
         }
       });
     }
@@ -134,6 +138,7 @@ const consoles: JupyterFrontEndPlugin<void> = {
     labShell.currentChanged.connect(async (_, update) => {
       const widget = update.newValue;
       if (!(widget instanceof ConsolePanel)) {
+        clearBreakpoints(debug);
         return;
       }
       await setDebugSession(app, debug, widget.session);
@@ -159,6 +164,7 @@ const files: JupyterFrontEndPlugin<void> = {
     labShell.currentChanged.connect((_, update) => {
       const widget = update.newValue;
       if (!(widget instanceof FileEditor)) {
+        clearBreakpoints(debug);
         return;
       }
 
@@ -209,6 +215,7 @@ const notebooks: JupyterFrontEndPlugin<void> = {
     labShell.currentChanged.connect(async (_, update) => {
       const widget = update.newValue;
       if (!(widget instanceof NotebookPanel)) {
+        clearBreakpoints(debug);
         return;
       }
       await setDebugSession(app, debug, widget.session);
