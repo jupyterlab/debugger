@@ -1,11 +1,13 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { CodeCell, ICellModel } from '@jupyterlab/cells';
+import { Cell, CodeCell } from '@jupyterlab/cells';
 
 import { CodeMirrorEditor } from '@jupyterlab/codemirror';
 
 import { ActivityMonitor } from '@jupyterlab/coreutils';
+
+import { IObservableString } from '@jupyterlab/observables';
 
 import { IDisposable } from '@phosphor/disposable';
 
@@ -14,6 +16,8 @@ import { Signal } from '@phosphor/signaling';
 import { Editor } from 'codemirror';
 
 import { Breakpoints, SessionTypes } from '../breakpoints';
+
+import { Callstack } from '../callstack';
 
 import { Debugger } from '../debugger';
 
@@ -41,14 +45,14 @@ export class CellManager implements IDisposable {
     }
     this.breakpointsModel = this._debuggerModel.breakpointsModel;
 
-    this._debuggerModel.variablesModel.changed.connect(() => {
-      this.cleanupHighlight();
-      const firstFrame = this._debuggerModel.callstackModel.frames[0];
-      if (!firstFrame) {
-        return;
+    this._debuggerModel.callstackModel.currentFrameChanged.connect(
+      (_, frame) => {
+        CellManager.cleanupHighlight(this.activeCell);
+        if (!frame) {
+          return;
+        }
       }
-      this.showCurrentLine(firstFrame.line);
-    });
+    );
 
     this.breakpointsModel.changed.connect(async () => {
       if (
@@ -73,26 +77,6 @@ export class CellManager implements IDisposable {
     }
   }
 
-  private showCurrentLine(lineNumber: number) {
-    if (!this.activeCell || !this.activeCell.inputArea) {
-      return;
-    }
-    const editor = this.activeCell.editor as CodeMirrorEditor;
-    this.cleanupHighlight();
-    editor.editor.addLineClass(lineNumber - 1, 'wrap', LINE_HIGHLIGHT_CLASS);
-  }
-
-  // TODO: call when the debugger stops
-  private cleanupHighlight() {
-    if (!this.activeCell || this.activeCell.isDisposed) {
-      return;
-    }
-    const editor = this.activeCell.editor as CodeMirrorEditor;
-    editor.doc.eachLine(line => {
-      editor.editor.removeLineClass(line, 'wrap', LINE_HIGHLIGHT_CLASS);
-    });
-  }
-
   dispose(): void {
     if (this.isDisposed) {
       return;
@@ -104,7 +88,7 @@ export class CellManager implements IDisposable {
       this._cellMonitor.dispose();
     }
     this.removeListener(this.activeCell);
-    this.cleanupHighlight();
+    CellManager.cleanupHighlight(this.activeCell);
     Signal.clearData(this);
   }
 
@@ -153,7 +137,7 @@ export class CellManager implements IDisposable {
       }
 
       this._cellMonitor = new ActivityMonitor({
-        signal: this.activeCell.model.contentChanged,
+        signal: this.activeCell.model.value.changed,
         timeout: CELL_CHANGED_TIMEOUT
       });
 
@@ -279,7 +263,10 @@ export class CellManager implements IDisposable {
   private breakpointsModel: Breakpoints.Model;
   private _activeCell: CodeCell;
   private _debuggerService: IDebugger;
-  private _cellMonitor: ActivityMonitor<ICellModel, void> = null;
+  private _cellMonitor: ActivityMonitor<
+    IObservableString,
+    IObservableString.IChangedArgs
+  > = null;
 }
 
 export namespace CellManager {
@@ -289,6 +276,31 @@ export namespace CellManager {
     breakpointsModel: Breakpoints.Model;
     activeCell?: CodeCell;
     type: SessionTypes;
+  }
+
+  /**
+   * Highlight the current line of the frame in the given cell.
+   * @param cell The cell to highlight.
+   * @param frame The frame with the current line number.
+   */
+  export function showCurrentLine(cell: Cell, frame: Callstack.IFrame) {
+    const editor = cell.editor as CodeMirrorEditor;
+    cleanupHighlight(cell);
+    editor.editor.addLineClass(frame.line - 1, 'wrap', LINE_HIGHLIGHT_CLASS);
+  }
+
+  /**
+   * Remove all line highlighting indicators for the given cell.
+   * @param cell The cell to cleanup.
+   */
+  export function cleanupHighlight(cell: Cell) {
+    if (!cell || cell.isDisposed) {
+      return;
+    }
+    const editor = cell.editor as CodeMirrorEditor;
+    editor.doc.eachLine(line => {
+      editor.editor.removeLineClass(line, 'wrap', LINE_HIGHLIGHT_CLASS);
+    });
   }
 }
 
