@@ -12,7 +12,6 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 export class Variables extends Panel {
   constructor(options: Variables.IOptions) {
     super();
-
     this.model = options.model;
     this.addClass('jp-DebuggerVariables');
     this.title.label = 'Variables';

@@ -107,7 +107,7 @@ class DebuggerHandler<H extends ConsoleHandler | NotebookHandler> {
       });
       this.handlers[widget.id] = handler;
       widget.disposed.connect(() => {
-        handler.dispose();
+        this.handlers[widget.id];
         delete this.handlers[widget.id];
         if (Object.keys(this.handlers).length === 0) {
           clearBreakpoints(debug);
@@ -214,6 +214,7 @@ const notebooks: JupyterFrontEndPlugin<void> = {
 
     labShell.currentChanged.connect(async (_, update) => {
       const widget = update.newValue;
+
       if (!(widget instanceof NotebookPanel)) {
         clearBreakpoints(debug);
         return;

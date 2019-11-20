@@ -152,7 +152,7 @@ export class CellManager implements IDisposable {
 
   protected sendEditorBreakpoints() {
     const cell = this.activeCell;
-    if (!cell || !cell.editor) {
+    if (!cell || !cell.inputArea) {
       return;
     }
 
