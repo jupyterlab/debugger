@@ -363,6 +363,11 @@ export class DebugService implements IDebugger, IDisposable {
     this._model.breakpoints.restoreBreakpoints(bpMap);
   }
 
+  clearUIBreakpoints() {
+    let bpMap = new Map<string, IDebugger.IBreakpoint[]>();
+    this._model.breakpoints.restoreBreakpoints(bpMap);
+  }
+
   /**
    * Retrieve the content of a source file.
    * @param source The source object containing the path to the file.

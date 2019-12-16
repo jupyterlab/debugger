@@ -300,6 +300,7 @@ const notebooks: JupyterFrontEndPlugin<void> = {
 
     labShell.currentChanged.connect(async (_, update) => {
       const widget = update.newValue;
+
       if (!(widget instanceof NotebookPanel)) {
         return;
       }

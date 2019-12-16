@@ -126,6 +126,11 @@ export interface IDebugger {
   clearBreakpoints(): Promise<void>;
 
   /**
+   * Clear breakpoints only in sidebar
+   */
+  clearUIBreakpoints(): void;
+
+  /**
    * Retrieve the content of a source file.
    * @param source The source object containing the path to the file.
    */
