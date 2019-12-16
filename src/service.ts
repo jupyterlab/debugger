@@ -351,11 +351,13 @@ export class DebugService implements IDebugger, IDisposable {
       return;
     }
 
-    this._model.breakpoints.breakpoints.forEach(
-      async (breakpoints, path, _) => {
-        await this._setBreakpoints([], path);
-      }
-    );
+    if (!this.session.client.isDisposed) {
+      this._model.breakpoints.breakpoints.forEach(
+        async (breakpoints, path, _) => {
+          await this._setBreakpoints([], path);
+        }
+      );
+    }
 
     let bpMap = new Map<string, IDebugger.IBreakpoint[]>();
     this._model.breakpoints.restoreBreakpoints(bpMap);
