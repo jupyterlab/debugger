@@ -179,6 +179,11 @@ class DebuggerHandler<
       handler.dispose();
       delete this._handlers[widget.id];
       updateAttribute();
+      const handlerIds = Object.keys(this._handlers);
+      if (handlerIds.length !== 0) {
+        return;
+      }
+      debug.clearUIBreakpoints();
     };
 
     const toggleDebugging = async () => {
