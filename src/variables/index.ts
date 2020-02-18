@@ -65,8 +65,8 @@ export class Variables extends Panel {
   }
 
   private _header: VariablesHeader;
-  private _tree: Widget;
-  private _table: Widget;
+  private _tree: VariablesBodyTree;
+  private _table: VariablesBodyTable;
 
   /**
    * A message handler invoked on a `'resize'` message.
@@ -82,7 +82,9 @@ export class Variables extends Panel {
    */
   private _resizeBody(msg: Widget.ResizeMessage) {
     const height = msg.height - this._header.node.offsetHeight;
-    this._table.node.style.height = `${height}px`;
+    if (this._table.getBody()) {
+      this._table.getBody().style.height = `${height - 25}px`;
+    }
     this._tree.node.style.height = `${height}px`;
   }
 }

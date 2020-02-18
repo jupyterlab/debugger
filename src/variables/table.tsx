@@ -33,6 +33,10 @@ export class VariablesBodyTable extends ReactWidget {
     this.addClass('jp-DebuggerVariables-body');
   }
 
+  getBody(): HTMLElement {
+    return this.node?.children[0]?.children[1] as HTMLElement;
+  }
+
   /**
    * Render the VariablesComponent.
    */
@@ -146,34 +150,34 @@ const VariablesComponent = ({
   };
 
   const Tbody = (variables: VariablesModel.IVariable[]) => (
-    <tbody>
+    <div className="table-body">
       {variables?.map(variable => (
-        <tr
+        <ul
           onDoubleClick={() => onVariableDoubleClicked(variable)}
           onClick={() => onVariableClicked(variable)}
           key={variable.evaluateName}
         >
-          <td>{variable.name}</td>
-          <td>{variable.type}</td>
-          <td className={selected === variable ? 'selected' : ''}>
+          <li>{variable.name}</li>
+          <li>{variable.type}</li>
+          <li className={selected === variable ? 'selected' : ''}>
             {variable.value}
-          </td>
-        </tr>
+          </li>
+        </ul>
       ))}
-    </tbody>
+    </div>
   );
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Value</th>
-        </tr>
-      </thead>
+    <div className="table">
+      <div className="table-header">
+        <ul>
+          <li>Name</li>
+          <li>Type</li>
+          <li>Value</li>
+        </ul>
+      </div>
       {Tbody(variables)}
-    </table>
+    </div>
   );
 };
 

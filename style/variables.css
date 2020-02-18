@@ -5,15 +5,16 @@
 
 .jp-DebuggerVariables-body {
   min-height: 24px;
-  overflow: auto;
 }
 
+.jp-DebuggerVariableDetails ul,
 .jp-DebuggerVariables-body ul {
   list-style: none;
   margin: 0;
   padding: 0.5em;
 }
 
+.jp-DebuggerVariableDetails ul li,
 .jp-DebuggerVariables-body ul li {
   padding: 5px;
   cursor: pointer;
@@ -77,25 +78,46 @@
   background: var(--jp-brand-color1);
 }
 
-.jp-detailsVariable-box {
-  position: fixed;
-  top: 30vh;
-  left: 20vw;
-  right: 0vw;
-  width: 500px;
-  z-index: 1253;
-  background-color: white;
-  text-align: center;
-  border: 1px solid #c1c1c1;
+.table {
+  display: flex;
+  flex-direction: column;
+  background: var(--jp-layout-color1);
 }
 
-.jp-detailsVariable-box #header {
-  cursor: grab;
-  font-weight: bold;
-  background-color: #c1c1c1;
+.table ul {
+  display: flex;
+  padding: 0;
+  margin: 0;
 }
 
-.jp-detailsVariable-box > button {
-  margin-bottom: 10px;
-  margin-top: 10px;
+.table .table-header ul li {
+  flex-basis: 100%;
+  border-right: 1px solid var(--jp-layout-color3);
+}
+
+.table .table-body {
+  overflow: overlay;
+}
+
+.table .table-body ul li {
+  overflow: hidden;
+  flex-basis: 100%;
+  text-overflow: ellipsis;
+  height: 30px;
+  white-space: nowrap;
+  line-height: 30px;
+  border-right: 1px solid var(--jp-layout-color3);
+}
+
+.table ul li:last-child {
+  border-right: none;
+}
+
+.table .table-body ul:nth-child(2n + 1) {
+  background-color: var(--jp-layout-color2);
+}
+
+.table ul li span {
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
