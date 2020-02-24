@@ -5,7 +5,7 @@ import { ArrayExt } from '@lumino/algorithm';
 
 import { ReactWidget } from '@jupyterlab/apputils';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { VariablesModel } from './model';
 
@@ -127,9 +127,12 @@ const VariablesComponent = ({
 }) => {
   const [variables, setVariables] = useState(data);
   const [selected, setSelected] = useState(null);
+  const bodyRef = useRef();
 
   useEffect(() => {
     setVariables(data);
+    const bodyEle = bodyRef.current as HTMLElement;
+    bodyEle.style.height = `${bodyEle.parentElement.parentElement.parentElement.offsetHeight}px`;
   }, [data]);
 
   const onVariableClicked = (variable: VariablesModel.IVariable) => {
@@ -150,7 +153,7 @@ const VariablesComponent = ({
   };
 
   const Tbody = (variables: VariablesModel.IVariable[]) => (
-    <div className="table-body">
+    <div ref={bodyRef} className="tableFlex-body">
       {variables?.map(variable => (
         <ul
           onDoubleClick={() => onVariableDoubleClicked(variable)}
@@ -167,13 +170,59 @@ const VariablesComponent = ({
     </div>
   );
 
+  /**
+   * Event used for column resize.
+   */
+  const onMouseDown = (e: React.MouseEvent, index: number) => {
+    const xStartPosition = e.clientX;
+    const element = (e.target as HTMLElement).offsetParent as HTMLElement;
+    const oldFlexBasis =
+      element.style.flexBasis === ''
+        ? 100
+        : parseInt(element.style.flexBasis, 10);
+
+    const setFlexInBody = (index: number, flexBasis: number) => {
+      const uls = (bodyRef.current as HTMLElement).children;
+      Array.from(uls).forEach(
+        ul =>
+          ((ul.children[
+            index
+          ] as HTMLElement).style.flexBasis = `${flexBasis}%`)
+      );
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      const diff =
+        index === 0 ? e.clientX - xStartPosition : xStartPosition - e.clientX;
+      const flexBasis = oldFlexBasis + diff;
+
+      element.style.flexBasis = `${flexBasis}%`;
+      setFlexInBody(index, flexBasis);
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
+  const handler = (index: number) => {
+    const className = index === 0 ? 'handler rigth' : 'handler left';
+    return (
+      <div onMouseDown={e => onMouseDown(e, index)} className={className}></div>
+    );
+  };
+
   return (
-    <div className="table">
-      <div className="table-header">
+    <div className="tableFlex">
+      <div className="tableFlex-header">
         <ul>
-          <li>Name</li>
-          <li>Type</li>
-          <li>Value</li>
+          <li>Name {handler(0)}</li>
+          <li>Type </li>
+          <li>Value {handler(2)}</li>
         </ul>
       </div>
       {Tbody(variables)}

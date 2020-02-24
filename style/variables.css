@@ -72,34 +72,46 @@
   border-right: none;
 }
 
-.jp-DebuggerVariableDetails table tbody td.selected,
-.jp-DebuggerVariables-body table tbody td.selected {
+.jp-DebuggerVariableDetails table .table-header ul li.selected,
+.jp-DebuggerVariables-body table .table-header ul li.selected {
   color: white;
   background: var(--jp-brand-color1);
 }
 
-.table {
+.jp-DebuggerVariableDetails .tableFlex,
+.jp-DebuggerVariables-body .tableFlex {
   display: flex;
   flex-direction: column;
   background: var(--jp-layout-color1);
 }
 
-.table ul {
+.jp-DebuggerVariableDetails .tableFlex ul,
+.jp-DebuggerVariables-body .tableFlex ul {
   display: flex;
   padding: 0;
   margin: 0;
 }
 
-.table .table-header ul li {
+.jp-DebuggerVariableDetails .tableFlex .tableFlex-header ul li,
+.jp-DebuggerVariables-body .tableFlex .tableFlex-header ul li {
   flex-basis: 100%;
+  cursor: auto;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   border-right: 1px solid var(--jp-layout-color3);
 }
 
-.table .table-body {
+.jp-DebuggerVariableDetails .tableFlex .tableFlex-body,
+.jp-DebuggerVariables-body .tableFlex .tableFlex-body {
   overflow: overlay;
 }
 
-.table .table-body ul li {
+.jp-DebuggerVariableDetails .tableFlex .tableFlex-body ul li,
+.jp-DebuggerVariables-body .tableFlex .tableFlex-body ul li {
+  position: relative;
   overflow: hidden;
   flex-basis: 100%;
   text-overflow: ellipsis;
@@ -109,15 +121,37 @@
   border-right: 1px solid var(--jp-layout-color3);
 }
 
-.table ul li:last-child {
+.jp-DebuggerVariableDetails .tableFlex ul li:last-child,
+.jp-DebuggerVariables-body .tableFlex ul li:last-child {
   border-right: none;
 }
 
-.table .table-body ul:nth-child(2n + 1) {
+.jp-DebuggerVariableDetails .tableFlex .tableFlex-body ul:nth-child(2n + 1),
+.jp-DebuggerVariables-body .tableFlex .tableFlex-body ul:nth-child(2n + 1) {
   background-color: var(--jp-layout-color2);
 }
 
-.table ul li span {
-  text-overflow: ellipsis;
-  overflow: hidden;
+.jp-DebuggerVariableDetails .handler,
+.jp-DebuggerVariables-body .handler {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  user-select: none;
+}
+
+.jp-DebuggerVariableDetails .handler:hover,
+.jp-DebuggerVariables-body .handler:hover {
+  background-color: var(--jp-warn-color0);
+}
+
+.jp-DebuggerVariableDetails .handler.rigth,
+.jp-DebuggerVariables-body .handler.rigth {
+  right: 0;
+}
+
+.jp-DebuggerVariableDetails .handler.left,
+.jp-DebuggerVariables-body .handler.left {
+  left: 0;
 }
