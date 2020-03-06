@@ -131,3 +131,13 @@
   margin-left: 50%;
   margin-right: 5px;
 }
+
+.jp-CarretButton {
+  display: flex;
+  cursor: pointer;
+}
+
+.jp-CarretButton > svg:hover {
+  background-color: var(--jp-layout-color1);
+  border-radius: 25%;
+}

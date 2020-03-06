@@ -4,6 +4,7 @@
 import { Toolbar } from '@jupyterlab/apputils';
 
 import { PanelLayout, Widget } from '@lumino/widgets';
+import { CarretWidget } from '../collapse';
 
 /**
  * The header for a Breakpoints Panel.
@@ -19,6 +20,9 @@ export class BreakpointsHeader extends Widget {
     title.node.textContent = 'Breakpoints';
 
     const layout = new PanelLayout();
+    const carret = new CarretWidget();
+
+    layout.addWidget(carret);
     layout.addWidget(title);
     layout.addWidget(this.toolbar);
     this.layout = layout;
