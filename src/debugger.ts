@@ -77,10 +77,13 @@ export namespace Debugger {
       const body = new SplitPanel();
 
       body.orientation = 'vertical';
+      body.alignment = 'start';
       body.addWidget(this.variables);
       body.addWidget(this.callstack);
       body.addWidget(this.breakpoints);
       body.addWidget(this.sources);
+      // empty widget
+      // body.addWidget(new Widget());
       body.addClass('jp-DebuggerSidebar-body');
 
       this.addWidget(body);
