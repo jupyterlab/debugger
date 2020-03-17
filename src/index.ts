@@ -18,6 +18,8 @@ import { IEditorServices } from '@jupyterlab/codeeditor';
 
 import { ConsolePanel, IConsoleTracker } from '@jupyterlab/console';
 
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+
 import { DocumentWidget } from '@jupyterlab/docregistry';
 
 import { FileEditor, IEditorTracker } from '@jupyterlab/fileeditor';
@@ -25,6 +27,14 @@ import { FileEditor, IEditorTracker } from '@jupyterlab/fileeditor';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 
 import { Session } from '@jupyterlab/services';
+
+import {
+  continueIcon,
+  stepIntoIcon,
+  stepOutIcon,
+  stepOverIcon,
+  terminateIcon
+} from './icons';
 
 import { Debugger } from './debugger';
 
@@ -85,9 +95,9 @@ const consoles: JupyterFrontEndPlugin<void> = {
     });
 
     const updateHandlerAndCommands = async (widget: ConsolePanel) => {
-      const sessionContext = widget.sessionContext;
+      const { sessionContext } = widget;
       await sessionContext.ready;
-      await handler.update(widget, sessionContext.session);
+      await handler.updateContext(widget, sessionContext);
       app.commands.notifyCommandChanged();
     };
 
@@ -202,9 +212,9 @@ const notebooks: JupyterFrontEndPlugin<void> = {
     });
 
     const updateHandlerAndCommands = async (widget: NotebookPanel) => {
-      const sessionContext = widget.sessionContext;
+      const { sessionContext } = widget;
       await sessionContext.ready;
-      await handler.update(widget, sessionContext.session);
+      await handler.updateContext(widget, sessionContext);
       app.commands.notifyCommandChanged();
     };
 
@@ -315,15 +325,16 @@ const variables: JupyterFrontEndPlugin<void> = {
 const main: JupyterFrontEndPlugin<IDebugger> = {
   id: '@jupyterlab/debugger:main',
   requires: [IEditorServices],
-  optional: [ILayoutRestorer, ICommandPalette],
+  optional: [ILayoutRestorer, ICommandPalette, ISettingRegistry],
   provides: IDebugger,
   autoStart: true,
-  activate: (
+  activate: async (
     app: JupyterFrontEnd,
     editorServices: IEditorServices,
     restorer: ILayoutRestorer | null,
-    palette: ICommandPalette | null
-  ): IDebugger => {
+    palette: ICommandPalette | null,
+    settingRegistry: ISettingRegistry | null
+  ): Promise<IDebugger> => {
     const { commands, shell } = app;
 
     const service = new DebuggerService();
@@ -331,7 +342,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.debugContinue, {
       label: 'Continue',
       caption: 'Continue',
-      iconClass: 'jp-MaterialIcon jp-RunIcon',
+      icon: continueIcon,
       isEnabled: () => {
         return service.hasStoppedThreads();
       },
@@ -344,7 +355,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.terminate, {
       label: 'Terminate',
       caption: 'Terminate',
-      iconClass: 'jp-MaterialIcon jp-StopIcon',
+      icon: terminateIcon,
       isEnabled: () => {
         return service.hasStoppedThreads();
       },
@@ -357,7 +368,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.next, {
       label: 'Next',
       caption: 'Next',
-      iconClass: 'jp-MaterialIcon jp-StepOverIcon',
+      icon: stepOverIcon,
       isEnabled: () => {
         return service.hasStoppedThreads();
       },
@@ -369,7 +380,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.stepIn, {
       label: 'StepIn',
       caption: 'Step In',
-      iconClass: 'jp-MaterialIcon jp-StepInIcon',
+      icon: stepIntoIcon,
       isEnabled: () => {
         return service.hasStoppedThreads();
       },
@@ -381,7 +392,7 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
     commands.addCommand(CommandIDs.stepOut, {
       label: 'StepOut',
       caption: 'Step Out',
-      iconClass: 'jp-MaterialIcon jp-StepOutIcon',
+      icon: stepOutIcon,
       isEnabled: () => {
         return service.hasStoppedThreads();
       },
@@ -404,6 +415,25 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
       callstackCommands,
       editorServices
     });
+
+    if (settingRegistry) {
+      const setting = await settingRegistry.load(main.id);
+      const updateVariableSettings = () => {
+        const filters = setting.get('variableFilters').composite as {
+          [key: string]: string[];
+        };
+        const kernelName = service.session?.connection?.kernel?.name;
+        const list = filters[kernelName];
+        if (!list) {
+          return;
+        }
+        sidebar.variables.filter = new Set<string>(list);
+      };
+
+      updateVariableSettings();
+      setting.changed.connect(updateVariableSettings);
+      sidebar.service.sessionChanged.connect(updateVariableSettings);
+    }
 
     sidebar.service.eventMessage.connect(_ => {
       commands.notifyCommandChanged();

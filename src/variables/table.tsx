@@ -1,19 +1,21 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { ArrayExt } from '@lumino/algorithm';
-
 import { ReactWidget } from '@jupyterlab/apputils';
 
+import { ArrayExt } from '@lumino/algorithm';
+
+import { CommandRegistry } from '@lumino/commands';
+
 import React, { useEffect, useState } from 'react';
+
+import { variableIcon } from '../icons';
 
 import { VariablesModel } from './model';
 
 import { IDebugger } from '../tokens';
 
 import { CommandIDs } from '..';
-
-import { CommandRegistry } from '@lumino/commands';
 
 /**
  * The body for a table of variables.
@@ -44,10 +46,19 @@ export class VariablesBodyTable extends ReactWidget {
             key={scope.name}
             data={scope.variables}
             commands={this._commands}
+            filter={this._filter}
           />
         ))}
       </>
     );
+  }
+
+  /**
+   * Set the variable filter list.
+   */
+  set filter(filter: Set<string>) {
+    this._filter = filter;
+    this.update();
   }
 
   /**
@@ -63,6 +74,7 @@ export class VariablesBodyTable extends ReactWidget {
   }
 
   private _scopes: VariablesModel.IScope[] = [];
+  private _filter = new Set<string>();
   private _commands: CommandRegistry;
 }
 
@@ -78,7 +90,7 @@ export class VariableDetails extends ReactWidget {
     super();
     const { details, commands, model, service, title } = options;
 
-    this.title.iconClass = 'jp-VariableIcon';
+    this.title.icon = variableIcon;
     this.title.label = `${service.session?.connection?.name} - details of ${title}`;
 
     this._variables = details;
@@ -113,13 +125,16 @@ export class VariableDetails extends ReactWidget {
  * A React component to display a table of variables.
  * @param data An array of variables.
  * @param service The debugger service.
+ * @param filter Optional variable filter list.
  */
 const VariablesComponent = ({
   data,
-  commands
+  commands,
+  filter
 }: {
   data: VariablesModel.IVariable[];
   commands: CommandRegistry;
+  filter?: Set<string>;
 }) => {
   const [variables, setVariables] = useState(data);
   const [selected, setSelected] = useState(null);
@@ -147,19 +162,21 @@ const VariablesComponent = ({
 
   const Tbody = (variables: VariablesModel.IVariable[]) => (
     <tbody>
-      {variables?.map(variable => (
-        <tr
-          onDoubleClick={() => onVariableDoubleClicked(variable)}
-          onClick={() => onVariableClicked(variable)}
-          key={variable.evaluateName}
-        >
-          <td>{variable.name}</td>
-          <td>{variable.type}</td>
-          <td className={selected === variable ? 'selected' : ''}>
-            {variable.value}
-          </td>
-        </tr>
-      ))}
+      {variables
+        ?.filter(variable => !filter.has(variable.evaluateName))
+        .map(variable => (
+          <tr
+            onDoubleClick={() => onVariableDoubleClicked(variable)}
+            onClick={() => onVariableClicked(variable)}
+            key={variable.evaluateName}
+          >
+            <td>{variable.name}</td>
+            <td>{variable.type}</td>
+            <td className={selected === variable ? 'selected' : ''}>
+              {variable.value}
+            </td>
+          </tr>
+        ))}
     </tbody>
   );
 
