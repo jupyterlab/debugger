@@ -20,7 +20,7 @@ export class VariablesHeader extends Widget {
     title.node.textContent = 'Variables';
 
     const layout = new PanelLayout();
-    const carret = new CaretWidget(0);
+    const carret = new CaretWidget();
 
     layout.addWidget(carret);
     layout.addWidget(title);

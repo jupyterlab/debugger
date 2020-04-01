@@ -32,7 +32,7 @@ export class SourcesHeader extends Widget {
       <SourcePathComponent model={model} />
     );
 
-    const carret = new CaretWidget(3);
+    const carret = new CaretWidget();
 
     layout.addWidget(carret);
     layout.addWidget(title);

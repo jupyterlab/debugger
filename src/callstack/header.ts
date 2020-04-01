@@ -20,7 +20,7 @@ export class CallstackHeader extends Widget {
     title.node.textContent = 'Callstack';
 
     const layout = new PanelLayout();
-    const carret = new CaretWidget(1);
+    const carret = new CaretWidget();
 
     layout.addWidget(carret);
     layout.addWidget(title);
