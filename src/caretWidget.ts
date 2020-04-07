@@ -6,18 +6,18 @@ import { Panel, SplitPanel, Widget } from '@lumino/widgets';
 import { caretDownIcon, caretLeftIcon } from '@jupyterlab/ui-components';
 
 /**
- * The Carret Button for collapse in SplitPanel.
+ * The Caret Button for collapse in SplitPanel.
  */
 export class CaretWidget extends Widget {
   openedHeight: string;
   /**
-   * Instantiate a new CarretWidget.
+   * Instantiate a new CaretWidget.
    */
   constructor() {
     super();
 
     const style = {
-      className: 'jp-CarretButton',
+      className: 'jp-CaretButton',
       height: 'auto',
       width: '20px'
     };

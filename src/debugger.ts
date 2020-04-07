@@ -82,8 +82,6 @@ export namespace Debugger {
       body.addWidget(this.callstack);
       body.addWidget(this.breakpoints);
       body.addWidget(this.sources);
-      // empty widget
-      // body.addWidget(new Widget());
       body.addClass('jp-DebuggerSidebar-body');
 
       this.addWidget(body);

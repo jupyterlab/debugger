@@ -20,9 +20,9 @@ export class BreakpointsHeader extends Widget {
     title.node.textContent = 'Breakpoints';
 
     const layout = new PanelLayout();
-    const carret = new CaretWidget();
+    const caret = new CaretWidget();
 
-    layout.addWidget(carret);
+    layout.addWidget(caret);
     layout.addWidget(title);
     layout.addWidget(this.toolbar);
     this.layout = layout;
