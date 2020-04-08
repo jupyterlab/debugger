@@ -33,6 +33,7 @@ export class Variables extends Panel {
     this._header = new VariablesHeader();
     this._tree = new VariablesBodyTree({ model, service });
     this._table = new VariablesBodyTable({ model, commands });
+    this._body = new VariablesBody(this._tree, this._table);
     this._table.hide();
 
     const onClick = () => {
@@ -58,8 +59,7 @@ export class Variables extends Panel {
     );
 
     this.addWidget(this._header);
-    this.addWidget(this._tree);
-    this.addWidget(this._table);
+    this.addWidget(this._body);
     this.addClass('jp-DebuggerVariables');
   }
 
@@ -92,6 +92,21 @@ export class Variables extends Panel {
   private _header: VariablesHeader;
   private _tree: VariablesBodyTree;
   private _table: VariablesBodyTable;
+  private _body: VariablesBody;
+}
+
+/**
+ * Allow to switch between table and tree bodies.
+ */
+class VariablesBody extends Panel {
+  constructor(
+    widgetBodyTree: VariablesBodyTree,
+    widgetBodyTable: VariablesBodyTable
+  ) {
+    super();
+    this.addWidget(widgetBodyTree);
+    this.addWidget(widgetBodyTable);
+  }
 }
 
 /**

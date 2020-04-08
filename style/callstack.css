@@ -12,6 +12,10 @@
   overflow: auto;
 }
 
+.jp-DebuggerCallstack .jp-Toolbar {
+  z-index: auto;
+}
+
 .jp-DebuggerCallstack-body ul {
   list-style: none;
   margin: 0;

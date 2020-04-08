@@ -44,7 +44,7 @@ export class CaretWidget extends Widget {
     for (const widget of splitWidgets) {
       const nextWidget = splitWidgets[index++ + 1] ?? null;
       setNextWidgetTop(widget, nextWidget);
-      if (!nextWidget?.node.classList.contains('hide')) {
+      if (!(nextWidget as Panel)?.widgets[1].isHidden) {
         break;
       }
     }
@@ -64,7 +64,7 @@ export class CaretWidget extends Widget {
         widget.node.style.top
       );
       if (
-        !widget.node.classList.contains('hide') &&
+        !(widget as Panel).widgets[1].isHidden &&
         diffPixel !== 25 &&
         diffPixel !== -38
       ) {
@@ -85,7 +85,6 @@ export class CaretWidget extends Widget {
       widget => clickedWidget === widget
     );
     const hideClassHandler = ['lm-mod-hidden', 'p-mod-hidden'];
-    const hideClassPanel = 'hide';
 
     if (this.isOpen) {
       this.openedHeight = clickedWidget.node.style.height;
@@ -93,15 +92,24 @@ export class CaretWidget extends Widget {
       this.moveClosedPanels(splitpanel.widgets.slice(index));
       this.node.removeChild(this.caretDown);
       this.node.append(this.caretLeft);
-      splitpanel.handles[index].classList.add(...hideClassHandler);
-      clickedWidget.node.classList.add(hideClassPanel);
+      if (index !== 0) {
+        splitpanel.handles[index - 1].classList.add(...hideClassHandler);
+      }
+      clickedWidget.widgets[1].hide();
     } else {
       clickedWidget.node.style.height = this.openedHeight;
       this.node.removeChild(this.caretLeft);
       this.node.append(this.caretDown);
-      splitpanel.handles[index].classList.remove(...hideClassHandler);
-      clickedWidget.node.classList.remove(hideClassPanel);
-      clickedWidget.widgets.forEach(widget => console.log({ widget }));
+      if (index !== 0) {
+        splitpanel.handles[index - 1].classList.remove(...hideClassHandler);
+      }
+      if (
+        splitpanel.widgets.length < index + 1 &&
+        !splitpanel.widgets[index + 1].isHidden
+      ) {
+        splitpanel.handles[index].classList.remove(...hideClassHandler);
+      }
+      clickedWidget.widgets[1].show();
       this.moveOnOpenPanel(
         splitpanel.widgets.slice(index + 1),
         splitpanel.handles.slice(index)

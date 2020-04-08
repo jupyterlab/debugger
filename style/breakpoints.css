@@ -13,6 +13,10 @@
   overflow: auto;
 }
 
+.jp-DebuggerBreakpoints .jp-Toolbar {
+  z-index: auto;
+}
+
 .jp-DebuggerBreakpoint {
   display: flex;
   align-items: center;
