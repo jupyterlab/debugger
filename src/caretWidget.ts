@@ -103,11 +103,10 @@ export class CaretWidget extends Widget {
       if (index !== 0) {
         splitpanel.handles[index - 1].classList.remove(...hideClassHandler);
       }
-      if (
-        splitpanel.widgets.length < index + 1 &&
-        !splitpanel.widgets[index + 1].isHidden
-      ) {
-        splitpanel.handles[index].classList.remove(...hideClassHandler);
+      if (splitpanel.widgets.length < index + 1) {
+        if (!splitpanel.widgets[index + 1].isHidden) {
+          splitpanel.handles[index].classList.remove(...hideClassHandler);
+        }
       }
       clickedWidget.widgets[1].show();
       this.moveOnOpenPanel(
