@@ -12,6 +12,18 @@ import { IDebugger } from '../tokens';
  */
 export class BreakpointsModel implements IDisposable {
   /**
+   * Get the last breakpoints from story
+   */
+  get currentBreakpoinstId(): string {
+    return this._currentBreakpointsId;
+  }
+  /**
+   * Set the last breakpoints from story
+   */
+  set currentBreakpointsId(id: string) {
+    this._currentBreakpointsId = id;
+  }
+  /**
    * Whether the model is disposed.
    */
   get isDisposed(): boolean {
@@ -84,6 +96,8 @@ export class BreakpointsModel implements IDisposable {
     this._restored.emit();
   }
 
+  // actual id for breakpoints from story of them
+  private _currentBreakpointsId: string;
   private _isDisposed = false;
   private _breakpoints = new Map<string, IDebugger.IBreakpoint[]>();
   private _changed = new Signal<this, IDebugger.IBreakpoint[]>(this);

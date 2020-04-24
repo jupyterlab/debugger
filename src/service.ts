@@ -326,6 +326,7 @@ export class DebuggerService implements IDebugger, IDisposable {
       const dumpedCell = await this.dumpCell(code);
       path = dumpedCell.sourcePath;
     }
+    this._model.breakpoints.currentBreakpointsId = path;
     const sourceBreakpoints = Private.toSourceBreakpoints(breakpoints);
     const reply = await this._setBreakpoints(sourceBreakpoints, path);
     let kernelBreakpoints = reply.body.breakpoints.map(breakpoint => {

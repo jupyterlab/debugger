@@ -65,13 +65,15 @@ const BreakpointsComponent = ({ model }: { model: BreakpointsModel }) => {
 
   return (
     <>
-      {breakpoints.map(entry => (
-        <BreakpointCellComponent
-          key={entry[0]}
-          breakpoints={entry[1]}
-          model={model}
-        />
-      ))}
+      {breakpoints
+        .filter(find => find[0] === model.currentBreakpointsId)
+        .map(entry => (
+          <BreakpointCellComponent
+            key={entry[0]}
+            breakpoints={entry[1]}
+            model={model}
+          />
+        ))}
     </>
   );
 };
