@@ -14,7 +14,7 @@ export class BreakpointsModel implements IDisposable {
   /**
    * Get the last breakpoints from story
    */
-  get currentBreakpoinstId(): string {
+  get currentBreakpointsId(): string {
     return this._currentBreakpointsId;
   }
   /**
