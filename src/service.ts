@@ -218,7 +218,6 @@ export class DebuggerService implements IDebugger, IDisposable {
       reply.body.tmpFilePrefix,
       reply.body.tmpFileSuffix
     );
-
     const breakpoints = reply.body.breakpoints;
     let bpMap = new Map<string, IDebugger.IBreakpoint[]>();
     if (breakpoints.length !== 0) {
@@ -313,11 +312,13 @@ export class DebuggerService implements IDebugger, IDisposable {
    * @param code - The code in the cell where the breakpoints are set.
    * @param breakpoints - The list of breakpoints to set.
    * @param path - Optional path to the file where to set the breakpoints.
+   * @param idCell
    */
   async updateBreakpoints(
     code: string,
     breakpoints: IDebugger.IBreakpoint[],
-    path?: string
+    path?: string,
+    idCell?: string
   ) {
     if (!this.session.isStarted) {
       return;
@@ -340,7 +341,7 @@ export class DebuggerService implements IDebugger, IDisposable {
       (breakpoint, i, arr) =>
         arr.findIndex(el => el.line === breakpoint.line) === i
     );
-    this._model.breakpoints.setBreakpoints(path, kernelBreakpoints);
+    this._model.breakpoints.setBreakpoints(path, kernelBreakpoints, idCell);
     await this.session.sendRequest('configurationDone', {});
   }
 

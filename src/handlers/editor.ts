@@ -44,6 +44,7 @@ export class EditorHandler implements IDisposable {
     this._path = options.path;
     this._debuggerService = options.debuggerService;
     this._editor = options.editor;
+    this._idCell = options.idCell;
 
     this._onModelChanged();
     this._debuggerService.modelChanged.connect(this._onModelChanged, this);
@@ -159,7 +160,8 @@ export class EditorHandler implements IDisposable {
     void this._debuggerService.updateBreakpoints(
       this._editor.model.value.text,
       breakpoints,
-      this._path
+      this._path,
+      this._idCell
     );
   }
 
@@ -190,7 +192,8 @@ export class EditorHandler implements IDisposable {
     void this._debuggerService.updateBreakpoints(
       this._editor.model.value.text,
       breakpoints,
-      this._path
+      this._path,
+      this._idCell
     );
   };
 
@@ -241,6 +244,7 @@ export class EditorHandler implements IDisposable {
 
   private _id: string;
   private _path: string;
+  private _idCell: string;
   private _editor: CodeEditor.IEditor;
   private _debuggerModel: DebuggerModel;
   private _breakpointsModel: BreakpointsModel;
@@ -273,6 +277,8 @@ export namespace EditorHandler {
      * An optional path to a source file.
      */
     path?: string;
+
+    idCell?: string;
   }
 
   /**

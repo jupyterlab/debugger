@@ -59,16 +59,21 @@ export class BreakpointsModel implements IDisposable {
 
   /**
    * Set the breakpoints for a given id (path).
-   * @param id The code id (path).
+   * @param path The code id .
    * @param breakpoints The list of breakpoints.
    */
-  setBreakpoints(id: string, breakpoints: IDebugger.IBreakpoint[]) {
-    this._breakpoints.set(id, breakpoints);
+  setBreakpoints(
+    path: string,
+    breakpoints: IDebugger.IBreakpoint[],
+    idCell: string
+  ) {
+    const paths = this._cellMap.get(idCell) ?? [];
+    this._cellMap.set(idCell, [...paths, path]);
+    this._removeOldBreakpointsFromStory(breakpoints, idCell);
+    this._breakpoints.set(path, breakpoints);
     this._changed.emit(breakpoints);
   }
-
   /**
-   * Get the breakpoints for a given id (path).
    * @param id The code id (path).
    */
   getBreakpoints(id: string): IDebugger.IBreakpoint[] {
@@ -84,8 +89,33 @@ export class BreakpointsModel implements IDisposable {
     this._restored.emit();
   }
 
+  /**
+   * Remove old breakpoints from story if some are set on the same line as a new.
+   * @param breakpoints
+   * @param idCell
+   * @private
+   */
+  private _removeOldBreakpointsFromStory(
+    breakpoints: IDebugger.IBreakpoint[],
+    idCell: string
+  ) {
+    const filteredPaths = Array.from(this._breakpoints.keys()).filter(path =>
+      this._cellMap.get(idCell).includes(path)
+    );
+    breakpoints.forEach(breakpoint => {
+      filteredPaths.forEach(path => {
+        const value = this._breakpoints.get(path) ?? [];
+        for (let entriesValues of value) {
+          if (breakpoint.line === entriesValues.line) {
+            this._breakpoints.delete(path);
+          }
+        }
+      });
+    });
+  }
   private _isDisposed = false;
   private _breakpoints = new Map<string, IDebugger.IBreakpoint[]>();
+  private _cellMap = new Map<string, string[]>();
   private _changed = new Signal<this, IDebugger.IBreakpoint[]>(this);
   private _restored = new Signal<this, void>(this);
   private _clicked = new Signal<this, IDebugger.IBreakpoint>(this);
