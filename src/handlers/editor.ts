@@ -172,7 +172,6 @@ export class EditorHandler implements IDisposable {
    * Send the breakpoints from the editor UI via the debug service.
    */
   private _sendEditorBreakpoints() {
-    console.log('_sendEditorBreakpoints');
     if (this._editor.isDisposed) {
       return;
     }
