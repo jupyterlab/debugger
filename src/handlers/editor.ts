@@ -69,7 +69,6 @@ export class EditorHandler implements IDisposable {
    * Dispose the handler.
    */
   dispose(): void {
-    this._clearEditor();
     this._removeGutterAfterDelete();
     if (this.isDisposed) {
       return;
@@ -80,17 +79,27 @@ export class EditorHandler implements IDisposable {
     Signal.clearData(this);
   }
 
+  /**
+   * Get when something in cell is changed
+   */
   get codeChanged(): boolean {
     return this._codeChanged;
   }
-
+  /**
+   * Set when something in cell is changed
+   */
   set codeChanged(codeChanged: boolean) {
     this._codeChanged = codeChanged;
   }
+  /**
+   * Get current idCell
+   */
   get idCell(): string {
     return this._idCell;
   }
-
+  /**
+   * Set current idCell
+   */
   set idCell(idCell: string) {
     this._idCell = idCell;
   }

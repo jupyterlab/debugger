@@ -10,6 +10,7 @@ import { IObservableDisposable } from '@lumino/disposable';
 import { ISignal } from '@lumino/signaling';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
+
 import { States } from './breakpoints/model';
 
 /**

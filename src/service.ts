@@ -10,6 +10,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { murmur2 } from 'murmurhash-js';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
+
 import { States } from './breakpoints/model';
 
 import { CallstackModel } from './callstack/model';

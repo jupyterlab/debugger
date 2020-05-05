@@ -98,7 +98,16 @@ export class BreakpointsModel implements IDisposable {
   private _clicked = new Signal<this, IDebugger.IBreakpoint>(this);
 }
 
+/**
+ * Class for map states of current cell
+ *
+ */
 export class States {
+  constructor(idCell?: string, codeChanged?: boolean) {
+    this._idCell = idCell;
+    this._codeChanged = codeChanged;
+  }
+
   get idCell(): string {
     return this._idCell;
   }
@@ -106,10 +115,6 @@ export class States {
   set idCell(value: string) {
     this._idCell = value;
   }
-
-  private _idCell?: string;
-  private _codeChanged?: boolean;
-
   get codeChanged(): boolean {
     return this._codeChanged;
   }
@@ -118,8 +123,6 @@ export class States {
     this._codeChanged = value;
   }
 
-  constructor(idCell?: string, codeChanged?: boolean) {
-    this._idCell = idCell;
-    this._codeChanged = codeChanged;
-  }
+  private _idCell?: string;
+  private _codeChanged?: boolean;
 }
