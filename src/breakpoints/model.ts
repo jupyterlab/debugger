@@ -11,7 +11,14 @@ import { IDebugger } from '../tokens';
  * A model for a list of breakpoints.
  */
 export class BreakpointsModel implements IDisposable {
-  /**
+  get statesOfCell(): Map<string, string> {
+    return this._statesOfCell;
+  }
+
+  set statesOfCell(value: Map<string, string>) {
+    this._statesOfCell = value;
+  }
+  /*
    * Whether the model is disposed.
    */
   get isDisposed(): boolean {
@@ -66,7 +73,6 @@ export class BreakpointsModel implements IDisposable {
     this._breakpoints.set(id, breakpoints);
     this._changed.emit(breakpoints);
   }
-
   /**
    * Get the breakpoints for a given id (path).
    * @param id The code id (path).
@@ -85,8 +91,35 @@ export class BreakpointsModel implements IDisposable {
   }
 
   private _isDisposed = false;
+  private _statesOfCell = new Map<string, string>();
   private _breakpoints = new Map<string, IDebugger.IBreakpoint[]>();
   private _changed = new Signal<this, IDebugger.IBreakpoint[]>(this);
   private _restored = new Signal<this, void>(this);
   private _clicked = new Signal<this, IDebugger.IBreakpoint>(this);
+}
+
+export class States {
+  get idCell(): string {
+    return this._idCell;
+  }
+
+  set idCell(value: string) {
+    this._idCell = value;
+  }
+
+  private _idCell?: string;
+  private _codeChanged?: boolean;
+
+  get codeChanged(): boolean {
+    return this._codeChanged;
+  }
+
+  set codeChanged(value: boolean) {
+    this._codeChanged = value;
+  }
+
+  constructor(idCell?: string, codeChanged?: boolean) {
+    this._idCell = idCell;
+    this._codeChanged = codeChanged;
+  }
 }

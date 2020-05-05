@@ -10,6 +10,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { murmur2 } from 'murmurhash-js';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { States } from './breakpoints/model';
 
 import { CallstackModel } from './callstack/model';
 
@@ -183,6 +184,13 @@ export class DebuggerService implements IDebugger, IDisposable {
   }
 
   /**
+   * Clear mapped cells states after dispose instance of notebook.
+   */
+  clearMappedCellsStates(): void {
+    this._model.breakpoints.statesOfCell.clear();
+  }
+
+  /**
    * Restarts the debugger.
    * Precondition: isStarted.
    */
@@ -313,19 +321,43 @@ export class DebuggerService implements IDebugger, IDisposable {
    * @param code - The code in the cell where the breakpoints are set.
    * @param breakpoints - The list of breakpoints to set.
    * @param path - Optional path to the file where to set the breakpoints.
+   * @param states
    */
   async updateBreakpoints(
     code: string,
     breakpoints: IDebugger.IBreakpoint[],
-    path?: string
+    path?: string,
+    states?: States
   ) {
     if (!this.session.isStarted) {
       return;
     }
+
     if (!path) {
       const dumpedCell = await this.dumpCell(code);
       path = dumpedCell.sourcePath;
     }
+    const oldState = this._model.breakpoints.statesOfCell.get(states.idCell);
+
+    if (oldState === undefined) {
+      this._model.breakpoints.statesOfCell.set(states.idCell, path);
+    }
+
+    if (states.codeChanged === true) {
+      await this.preparationToSetBreakpoint(oldState, []);
+      await this.preparationToSetBreakpoint(path, breakpoints);
+      this._model.breakpoints.statesOfCell.delete(states.idCell);
+      this._model.breakpoints.statesOfCell.set(states.idCell, path);
+    } else {
+      await this.preparationToSetBreakpoint(path, breakpoints);
+    }
+    await this.session.sendRequest('configurationDone', {});
+  }
+
+  async preparationToSetBreakpoint(
+    path: string,
+    breakpoints: IDebugger.IBreakpoint[]
+  ): Promise<void> {
     const sourceBreakpoints = Private.toSourceBreakpoints(breakpoints);
     const reply = await this._setBreakpoints(sourceBreakpoints, path);
     let kernelBreakpoints = reply.body.breakpoints.map(breakpoint => {
@@ -341,9 +373,7 @@ export class DebuggerService implements IDebugger, IDisposable {
         arr.findIndex(el => el.line === breakpoint.line) === i
     );
     this._model.breakpoints.setBreakpoints(path, kernelBreakpoints);
-    await this.session.sendRequest('configurationDone', {});
   }
-
   /**
    * Clear all the breakpoints for the current session.
    */

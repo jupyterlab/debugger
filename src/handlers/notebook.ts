@@ -47,6 +47,7 @@ export class NotebookHandler implements IDisposable {
     if (this.isDisposed) {
       return;
     }
+    this._debuggerService.clearMappedCellsStates();
     this.isDisposed = true;
     this._cellMap.values().forEach(handler => handler.dispose());
     this._cellMap.dispose();
@@ -74,7 +75,8 @@ export class NotebookHandler implements IDisposable {
     const codeCell = cell as CodeCell;
     const editorHandler = new EditorHandler({
       debuggerService: this._debuggerService,
-      editor: codeCell.editor
+      editor: codeCell.editor,
+      idCell: cell.model.id
     });
     codeCell.disposed.connect(() => {
       this._cellMap.delete(modelId);
