@@ -338,6 +338,12 @@ export class DebuggerService implements IDebugger, IDisposable {
       const dumpedCell = await this.dumpCell(code);
       path = dumpedCell.sourcePath;
     }
+    if (!states) {
+      await this.preparationToSetBreakpoint(path, breakpoints);
+      await this.session.sendRequest('configurationDone', {});
+      return;
+    }
+
     const oldState = this._model.breakpoints.statesOfCell.get(states.idCell);
 
     if (oldState === undefined) {
