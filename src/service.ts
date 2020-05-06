@@ -334,8 +334,6 @@ export class DebuggerService implements IDebugger, IDisposable {
       return;
     }
 
-    console.log('states.idCell', states.idCell);
-
     if (!path) {
       const dumpedCell = await this.dumpCell(code);
       path = dumpedCell.sourcePath;
