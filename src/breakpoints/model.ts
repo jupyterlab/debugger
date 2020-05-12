@@ -11,12 +11,12 @@ import { IDebugger } from '../tokens';
  * A model for a list of breakpoints.
  */
 export class BreakpointsModel implements IDisposable {
-  get statesOfCell(): Map<string, string> {
-    return this._statesOfCell;
+  get oldPathFromCell(): Map<string, string> {
+    return this._oldPathFromCell;
   }
 
-  set statesOfCell(value: Map<string, string>) {
-    this._statesOfCell = value;
+  set oldPathFromCell(value: Map<string, string>) {
+    this._oldPathFromCell = value;
   }
   /*
    * Whether the model is disposed.
@@ -65,6 +65,16 @@ export class BreakpointsModel implements IDisposable {
   }
 
   /**
+   * Remove breakpoints which are removed.
+   * That is, if path has empty array array
+   *
+   */
+  cleanBreakpointsMapAboutEmptyArray(): void {
+    Array.from(this._breakpoints.entries())
+      .filter(value => value[1].length === 0)
+      .forEach(value => this._breakpoints.delete(value[0]));
+  }
+  /**
    * Set the breakpoints for a given id (path).
    * @param id The code id (path).
    * @param breakpoints The list of breakpoints.
@@ -91,7 +101,7 @@ export class BreakpointsModel implements IDisposable {
   }
 
   private _isDisposed = false;
-  private _statesOfCell = new Map<string, string>();
+  private _oldPathFromCell = new Map<string, string>();
   private _breakpoints = new Map<string, IDebugger.IBreakpoint[]>();
   private _changed = new Signal<this, IDebugger.IBreakpoint[]>(this);
   private _restored = new Signal<this, void>(this);

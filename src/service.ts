@@ -188,7 +188,7 @@ export class DebuggerService implements IDebugger, IDisposable {
    * Clear mapped cells states after dispose instance of notebook.
    */
   clearMappedCellsStates(): void {
-    this._model.breakpoints.statesOfCell.clear();
+    this._model.breakpoints.oldPathFromCell.clear();
   }
 
   /**
@@ -242,6 +242,27 @@ export class DebuggerService implements IDebugger, IDisposable {
           })
         );
       });
+    }
+
+    const unassociatedBreakpoints = (
+      fromServer: Map<string, IDebugger.IBreakpoint[]>,
+      fromNotebook: Map<string, IDebugger.IBreakpoint[]>
+    ) => {
+      let breakpointsOnlyOnServer: Array<string> = [];
+      for (let [key] of fromServer) {
+        if (!fromNotebook.has(key)) {
+          breakpointsOnlyOnServer.push(key);
+        }
+      }
+      return breakpointsOnlyOnServer;
+    };
+
+    for (const path of unassociatedBreakpoints(
+      bpMap,
+      this._model.breakpoints.breakpoints
+    )) {
+      bpMap.delete(path);
+      await this._setBreakpoints([], path);
     }
 
     const stoppedThreads = new Set(reply.body.stoppedThreads);
@@ -344,23 +365,28 @@ export class DebuggerService implements IDebugger, IDisposable {
       return;
     }
 
-    const oldState = this._model.breakpoints.statesOfCell.get(states.idCell);
+    const oldState = this._model.breakpoints.oldPathFromCell.get(states.idCell);
 
     if (oldState === undefined) {
-      this._model.breakpoints.statesOfCell.set(states.idCell, path);
+      this._model.breakpoints.oldPathFromCell.set(states.idCell, path);
     }
 
     if (states.codeChanged === true) {
       await this.preparationToSetBreakpoint(oldState, []);
       await this.preparationToSetBreakpoint(path, breakpoints);
-      this._model.breakpoints.statesOfCell.delete(states.idCell);
-      this._model.breakpoints.statesOfCell.set(states.idCell, path);
+      this._model.breakpoints.oldPathFromCell.delete(states.idCell);
+      this._model.breakpoints.oldPathFromCell.set(states.idCell, path);
     } else {
       await this.preparationToSetBreakpoint(path, breakpoints);
     }
+    this._model.breakpoints.cleanBreakpointsMapAboutEmptyArray();
     await this.session.sendRequest('configurationDone', {});
   }
 
+  /**
+   * @param path
+   * @param breakpoints
+   */
   async preparationToSetBreakpoint(
     path: string,
     breakpoints: IDebugger.IBreakpoint[]

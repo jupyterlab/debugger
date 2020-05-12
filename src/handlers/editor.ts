@@ -223,7 +223,7 @@ export class EditorHandler implements IDisposable {
       this._editor.model.value.text,
       breakpoints,
       this._path,
-      new States(this._idCell)
+      new States(this._idCell, false)
     );
   };
 
