@@ -66,7 +66,7 @@ export class BreakpointsModel implements IDisposable {
 
   /**
    * Remove breakpoints which are removed.
-   * That is, if path has empty array array
+   * That is, if path has empty array
    *
    */
   cleanBreakpointsMapAboutEmptyArray(): void {
