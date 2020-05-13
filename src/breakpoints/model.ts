@@ -70,9 +70,11 @@ export class BreakpointsModel implements IDisposable {
    *
    */
   cleanBreakpointsMapAboutEmptyArray(): void {
-    Array.from(this._breakpoints.entries())
-      .filter(value => value[1].length === 0)
-      .forEach(value => this._breakpoints.delete(value[0]));
+    Array.from(this._breakpoints.entries()).forEach(value => {
+      if (value[1].length === 0) {
+        this._breakpoints.delete(value[0]);
+      }
+    });
   }
   /**
    * Set the breakpoints for a given id (path).
