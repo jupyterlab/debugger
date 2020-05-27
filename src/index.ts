@@ -10,6 +10,7 @@ import {
 
 import {
   ICommandPalette,
+  IThemeManager,
   MainAreaWidget,
   WidgetTracker
 } from '@jupyterlab/apputils';
@@ -28,12 +29,15 @@ import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 
 import { Session } from '@jupyterlab/services';
 
+import { EditorFinder, IDebuggerEditorFinder } from './editor-finder';
+
 import {
   continueIcon,
   stepIntoIcon,
   stepOutIcon,
   stepOverIcon,
-  terminateIcon
+  terminateIcon,
+  variableIcon
 } from './icons';
 
 import { Debugger } from './debugger';
@@ -46,9 +50,9 @@ import { DebuggerHandler } from './handler';
 
 import { IDebugger } from './tokens';
 
-import { VariableDetails } from './variables/table';
-
 import { DebuggerModel } from './model';
+
+import { VariablesBodyGrid } from './variables/grid';
 
 /**
  * The command IDs used by the debugger plugin.
@@ -68,7 +72,7 @@ export namespace CommandIDs {
 
   export const stepOut = 'debugger:stepOut';
 
-  export const variableDetails = 'debugger:variable-details';
+  export const inspectVariable = 'debugger:inspect-variable';
 }
 
 /**
@@ -198,19 +202,18 @@ const notebooks: JupyterFrontEndPlugin<void> = {
   optional: [ILabShell],
   activate: (
     app: JupyterFrontEnd,
-    debug: IDebugger,
+    service: IDebugger,
     notebookTracker: INotebookTracker,
     labShell: ILabShell
   ) => {
     const handler = new DebuggerHandler({
       type: 'notebook',
       shell: app.shell,
-      service: debug
+      service
     });
-    debug.model.disposed.connect(() => {
-      handler.disposeAll(debug);
+    service.model.disposed.connect(() => {
+      handler.disposeAll(service);
     });
-
     const updateHandlerAndCommands = async (widget: NotebookPanel) => {
       const { sessionContext } = widget;
       await sessionContext.ready;
@@ -243,27 +246,59 @@ const notebooks: JupyterFrontEndPlugin<void> = {
 const tracker: JupyterFrontEndPlugin<void> = {
   id: '@jupyterlab/debugger:tracker',
   autoStart: true,
-  requires: [IDebugger, IEditorServices],
-  optional: [INotebookTracker, IConsoleTracker, IEditorTracker],
+  requires: [IDebugger, IEditorServices, IDebuggerEditorFinder],
   activate: (
     app: JupyterFrontEnd,
     debug: IDebugger,
     editorServices: IEditorServices,
-    notebookTracker: INotebookTracker,
-    consoleTracker: IConsoleTracker,
-    editorTracker: IEditorTracker
+    editorFinder: IDebuggerEditorFinder
   ) => {
     new TrackerHandler({
       shell: app.shell,
       editorServices,
       debuggerService: debug,
+      editorFinder
+    });
+  }
+};
+
+/**
+ * A plugin that provides a debugger service.
+ */
+const service: JupyterFrontEndPlugin<IDebugger> = {
+  id: '@jupyterlab/debugger:service',
+  autoStart: true,
+  provides: IDebugger,
+  activate: () => new DebuggerService()
+};
+
+/**
+ * A plugin that tracks editors, console and file editors used for debugging.
+ */
+const finder: JupyterFrontEndPlugin<IDebuggerEditorFinder> = {
+  id: '@jupyterlab/debugger:editor-finder',
+  autoStart: true,
+  provides: IDebuggerEditorFinder,
+  requires: [IDebugger, IEditorServices],
+  optional: [INotebookTracker, IConsoleTracker, IEditorTracker],
+  activate: (
+    app: JupyterFrontEnd,
+    service: IDebugger,
+    editorServices: IEditorServices,
+    notebookTracker: INotebookTracker | null,
+    consoleTracker: IConsoleTracker | null,
+    editorTracker: IEditorTracker | null
+  ): IDebuggerEditorFinder => {
+    return new EditorFinder({
+      shell: app.shell,
+      service,
+      editorServices,
       notebookTracker,
       consoleTracker,
       editorTracker
     });
   }
 };
-
 /*
  * A plugin to open detailed views for variables.
  */
@@ -271,46 +306,69 @@ const variables: JupyterFrontEndPlugin<void> = {
   id: '@jupyterlab/debugger:variables',
   autoStart: true,
   requires: [IDebugger],
-  activate: (app: JupyterFrontEnd, service: IDebugger) => {
+  optional: [IThemeManager],
+  activate: (
+    app: JupyterFrontEnd,
+    service: IDebugger,
+    themeManager: IThemeManager
+  ) => {
     const { commands, shell } = app;
-    const tracker = new WidgetTracker<MainAreaWidget<VariableDetails>>({
-      namespace: 'variableDetails'
+    const tracker = new WidgetTracker<MainAreaWidget<VariablesBodyGrid>>({
+      namespace: 'debugger/inspect-variable'
     });
 
-    commands.addCommand(CommandIDs.variableDetails, {
-      label: 'Variable Details',
-      caption: 'Variable Details',
+    commands.addCommand(CommandIDs.inspectVariable, {
+      label: 'Inspect Variable',
+      caption: 'Inspect Variable',
       execute: async args => {
         const { variableReference } = args;
         if (!variableReference || variableReference === 0) {
           return;
         }
-        const details = await service.getVariableDetails(
+        const variables = await service.inspectVariable(
           variableReference as number
         );
 
         const title = args.title as string;
-        const id = `jp-debugger-details-${title}`;
+        const id = `jp-debugger-variable-${title}`;
         if (
-          !details ||
-          details.length === 0 ||
+          !variables ||
+          variables.length === 0 ||
           tracker.find(widget => widget.id === id)
         ) {
           return;
         }
 
         const model = (service.model as DebuggerModel).variables;
-        const widget = new MainAreaWidget<VariableDetails>({
-          content: new VariableDetails({
-            commands,
-            service,
-            details,
+        const widget = new MainAreaWidget<VariablesBodyGrid>({
+          content: new VariablesBodyGrid({
             model,
-            title
+            commands,
+            scopes: [{ name: title, variables }]
           })
         });
+        widget.addClass('jp-DebuggerVariables');
         widget.id = id;
+        widget.title.icon = variableIcon;
+        widget.title.label = `${service.session?.connection?.name} - ${title}`;
         void tracker.add(widget);
+
+        model.changed.connect(() => widget.dispose());
+
+        if (themeManager) {
+          const updateStyle = () => {
+            const isLight = themeManager?.theme
+              ? themeManager.isLight(themeManager.theme)
+              : true;
+            widget.content.theme = isLight ? 'light' : 'dark';
+          };
+          themeManager.themeChanged.connect(updateStyle);
+          widget.disposed.connect(() =>
+            themeManager.themeChanged.disconnect(updateStyle)
+          );
+          updateStyle();
+        }
+
         shell.add(widget, 'main', {
           mode: tracker.currentWidget ? 'split-right' : 'split-bottom'
         });
@@ -320,24 +378,24 @@ const variables: JupyterFrontEndPlugin<void> = {
 };
 
 /**
- * A plugin providing a tracker code debuggers.
+ * The main debugger UI plugin.
  */
-const main: JupyterFrontEndPlugin<IDebugger> = {
+const main: JupyterFrontEndPlugin<void> = {
   id: '@jupyterlab/debugger:main',
-  requires: [IEditorServices],
-  optional: [ILayoutRestorer, ICommandPalette, ISettingRegistry],
-  provides: IDebugger,
+  requires: [IDebugger, IEditorServices, IDebuggerEditorFinder],
+  optional: [ILayoutRestorer, ICommandPalette, ISettingRegistry, IThemeManager],
   autoStart: true,
   activate: async (
     app: JupyterFrontEnd,
+    service: IDebugger,
     editorServices: IEditorServices,
+    editorFinder: IDebuggerEditorFinder,
     restorer: ILayoutRestorer | null,
     palette: ICommandPalette | null,
-    settingRegistry: ISettingRegistry | null
-  ): Promise<IDebugger> => {
+    settingRegistry: ISettingRegistry | null,
+    themeManager: IThemeManager | null
+  ): Promise<void> => {
     const { commands, shell } = app;
-
-    const service = new DebuggerService();
 
     commands.addCommand(CommandIDs.debugContinue, {
       label: 'Continue',
@@ -435,6 +493,17 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
       sidebar.service.sessionChanged.connect(updateVariableSettings);
     }
 
+    if (themeManager) {
+      const updateStyle = () => {
+        const isLight = themeManager?.theme
+          ? themeManager.isLight(themeManager.theme)
+          : true;
+        sidebar.variables.theme = isLight ? 'light' : 'dark';
+      };
+      themeManager.themeChanged.connect(updateStyle);
+      updateStyle();
+    }
+
     sidebar.service.eventMessage.connect(_ => {
       commands.notifyCommandChanged();
     });
@@ -461,22 +530,21 @@ const main: JupyterFrontEndPlugin<IDebugger> = {
         palette.addItem({ command, category });
       });
     }
-
-    return service;
   }
 };
 
 /**
  * Export the plugins as default.
  */
-
 const plugins: JupyterFrontEndPlugin<any>[] = [
+  service,
   consoles,
   files,
   notebooks,
   tracker,
   variables,
-  main
+  main,
+  finder
 ];
 
 export default plugins;

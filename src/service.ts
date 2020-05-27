@@ -35,9 +35,7 @@ export class DebuggerService implements IDebugger, IDisposable {
     // TODO: also checks that the notebook or console
     // runs a kernel with debugging ability
     this._session = null;
-    // The model will be set by the UI which can be built
-    // after the service.
-    this._model = null;
+    this._model = new DebuggerModel();
   }
 
   /**
@@ -243,6 +241,7 @@ export class DebuggerService implements IDebugger, IDisposable {
         );
       });
     }
+
     const unassociatedBreakpoints = (
       fromServer: Map<string, IDebugger.IBreakpoint[]>,
       fromNotebook: Map<string, IDebugger.IBreakpoint[]>
@@ -255,6 +254,7 @@ export class DebuggerService implements IDebugger, IDisposable {
       }
       return breakpointsOnlyOnServer;
     };
+
     for (const path of unassociatedBreakpoints(
       bpMap,
       this._model.breakpoints.breakpoints
@@ -262,6 +262,7 @@ export class DebuggerService implements IDebugger, IDisposable {
       bpMap.delete(path);
       await this._setBreakpoints([], path);
     }
+
     const stoppedThreads = new Set(reply.body.stoppedThreads);
     this._model.stoppedThreads = stoppedThreads;
 
@@ -444,10 +445,11 @@ export class DebuggerService implements IDebugger, IDisposable {
   }
 
   /**
-   * Request details for a variable.
-   * @param variable The variable for which to request details.
+   * Request variables for a given variable reference.
+   *
+   * @param variablesReference The variable reference to request.
    */
-  async getVariableDetails(
+  async inspectVariable(
     variablesReference: number
   ): Promise<DebugProtocol.Variable[]> {
     const reply = await this.session.sendRequest('variables', {
