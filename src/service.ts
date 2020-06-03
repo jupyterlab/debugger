@@ -1,7 +1,9 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import { Session } from '@jupyterlab/services';
+import { Session, KernelMessage } from '@jupyterlab/services';
+
+import { PromiseDelegate } from '@lumino/coreutils';
 
 import { IDisposable } from '@lumino/disposable';
 
@@ -133,10 +135,32 @@ export class DebuggerService implements IDebugger, IDisposable {
     if (!kernel) {
       return false;
     }
-    const info =
-      (((await kernel.info) as unknown) as IDebugger.ISession.IInfoReply) ??
-      null;
-    return !!(info?.debugger ?? false);
+    // The `kernel_info_request` message is currently sent on the `shell` channel
+    // in JupyterLab: https://github.com/jupyterlab/jupyterlab/blob/e7317f21b48183423e375dc266476a4289eb0fa3/packages/services/src/kernel/default.ts#L518
+    // Since `shell` messages are processed in order, the `kernel_info_request` message is blocked if the kernel is
+    // already executing code, or if execution has stopped (breakpoint hit).
+    // Instead we send a `debugInfo` request on the `control` channel, so this message can be processed
+    // even if `shell` is currently blocked, assuming the kernel concurrency model allows it.
+
+    const reply = new PromiseDelegate<boolean>();
+    const future = kernel.requestDebug({
+      type: 'request',
+      seq: 0,
+      command: 'debugInfo'
+    });
+    future.onReply = (msg: KernelMessage.IDebugReplyMsg): void => {
+      reply.resolve(true);
+    };
+
+    // There is no error or reply when sending a message that a kernel doesn't recognize.
+    // Instead, use a timeout to wait for a response.
+    window.clearTimeout(this._debugInfoTimeoutId);
+    this._debugInfoTimeoutId = window.setTimeout(() => {
+      future.dispose();
+      reply.resolve(false);
+    }, 2000);
+
+    return reply.promise;
   }
 
   /**
@@ -617,6 +641,7 @@ export class DebuggerService implements IDebugger, IDisposable {
   }
 
   private _isDisposed = false;
+  private _debugInfoTimeoutId = -1;
   private _session: IDebugger.ISession;
   private _model: DebuggerModel;
   private _sessionChanged = new Signal<IDebugger, IDebugger.ISession>(this);
