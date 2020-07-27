@@ -107,10 +107,12 @@ export class DebuggerHandler {
    *
    * @param widget The widget to update.
    * @param connection The session connection.
+   * @param manuallyRun - Flag for run button function manually
    */
   async update(
     widget: DebuggerHandler.SessionWidget[DebuggerHandler.SessionType],
-    connection: Session.ISessionConnection
+    connection: Session.ISessionConnection,
+    manuallyRun?: boolean
   ): Promise<void> {
     if (!connection) {
       delete this._kernelChangedHandlers[widget.id];
@@ -143,8 +145,7 @@ export class DebuggerHandler {
     }
     connection.statusChanged.connect(statusChanged);
     this._statusChangedHandlers[widget.id] = statusChanged;
-
-    return this._update(widget, connection);
+    return this._update(widget, connection, manuallyRun);
   }
 
   /**
@@ -153,10 +154,12 @@ export class DebuggerHandler {
    *
    * @param widget The widget to update.
    * @param sessionContext The session context.
+   * @param manuallyRun - Flag for run button function manually
    */
   async updateContext(
     widget: DebuggerHandler.SessionWidget[DebuggerHandler.SessionType],
-    sessionContext: ISessionContext
+    sessionContext: ISessionContext,
+    manuallyRun?: boolean
   ): Promise<void> {
     const connectionChanged = (): void => {
       const { session: connection } = sessionContext;
@@ -173,7 +176,7 @@ export class DebuggerHandler {
     this._contextKernelChangedHandlers[widget.id] = connectionChanged;
     sessionContext.kernelChanged.connect(connectionChanged);
 
-    return this.update(widget, sessionContext.session);
+    return this.update(widget, sessionContext.session, manuallyRun);
   }
 
   /**
@@ -181,10 +184,12 @@ export class DebuggerHandler {
    *
    * @param widget The widget to update.
    * @param connection The session connection.
+   * @param manuallyRun - Flag for run button function manually
    */
-  private async _update(
+  async _update(
     widget: DebuggerHandler.SessionWidget[DebuggerHandler.SessionType],
-    connection: Session.ISessionConnection
+    connection: Session.ISessionConnection,
+    manuallyRun?: boolean
   ): Promise<void> {
     if (!this._service.model) {
       return;
@@ -311,6 +316,9 @@ export class DebuggerHandler {
     await this._service.restoreState(false);
     addToolbarButton();
 
+    if (manuallyRun) {
+      await toggleDebugging();
+    }
     // check the state of the debug session
     if (!this._service.isStarted) {
       removeHandlers();

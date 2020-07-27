@@ -69,6 +69,8 @@ export namespace CommandIDs {
   export const stepOut = 'debugger:stepOut';
 
   export const inspectVariable = 'debugger:inspect-variable';
+
+  export const startDebug = 'debugger:start-debug';
 }
 
 /**
@@ -207,6 +209,26 @@ const notebooks: JupyterFrontEndPlugin<void> = {
     notebookTracker: INotebookTracker,
     labShell: ILabShell
   ) => {
+    app.commands.addCommand(CommandIDs.startDebug, {
+      label: 'StartDebug',
+      caption: 'Start Debug',
+      icon: stepOutIcon,
+      isEnabled: () => {
+        // @todo should be something similar like threadHasStopped
+        return true;
+      },
+      execute: async () => {
+        await updateCurrentWidget();
+      }
+    });
+
+    // @todo selector probably should be different, shortcut key is draft as well
+    app.commands.addKeyBinding({
+      command: CommandIDs.startDebug,
+      keys: ['Alt A'],
+      selector: 'div'
+    });
+
     const handler = new DebuggerHandler({
       type: 'notebook',
       shell: app.shell,
@@ -216,12 +238,20 @@ const notebooks: JupyterFrontEndPlugin<void> = {
       handler.disposeAll(service);
     });
     const updateHandlerAndCommands = async (
-      widget: NotebookPanel
+      widget: NotebookPanel,
+      manuallyRun?: boolean
     ): Promise<void> => {
       const { sessionContext } = widget;
       await sessionContext.ready;
-      await handler.updateContext(widget, sessionContext);
+      await handler.updateContext(widget, sessionContext, manuallyRun);
       app.commands.notifyCommandChanged();
+    };
+
+    const updateCurrentWidget = async (): Promise<void> => {
+      if (labShell) {
+        const widget = notebookTracker.currentWidget;
+        await updateHandlerAndCommands(widget, true);
+      }
     };
 
     if (labShell) {
