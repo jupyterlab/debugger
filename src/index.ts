@@ -19,7 +19,7 @@ import { IEditorServices } from '@jupyterlab/codeeditor';
 
 import { ConsolePanel, IConsoleTracker } from '@jupyterlab/console';
 
-import { PathExt } from '@jupyterlab/coreutils';
+import { PageConfig, PathExt } from '@jupyterlab/coreutils';
 
 import { DocumentWidget } from '@jupyterlab/docregistry';
 
@@ -381,14 +381,20 @@ const main: JupyterFrontEndPlugin<void> = {
     const { commands, shell, serviceManager } = app;
     const { kernelspecs } = serviceManager;
 
-    // hide the debugger sidebar if no kernel with support for debugging is available
-    await kernelspecs.ready;
-    const specs = kernelspecs.specs.kernelspecs;
-    const enabled = Object.keys(specs).some(
-      name => !!(specs[name].metadata?.['debugger'] ?? false)
-    );
-    if (!enabled) {
-      return;
+    // First check if there is a PageConfig override for the extension visibility
+    const alwaysShowDebuggerExtension =
+      PageConfig.getOption('alwaysShowDebuggerExtension').toLowerCase() ===
+      'true';
+    if (!alwaysShowDebuggerExtension) {
+      // hide the debugger sidebar if no kernel with support for debugging is available
+      await kernelspecs.ready;
+      const specs = kernelspecs.specs.kernelspecs;
+      const enabled = Object.keys(specs).some(
+        name => !!(specs[name].metadata?.['debugger'] ?? false)
+      );
+      if (!enabled) {
+        return;
+      }
     }
 
     commands.addCommand(CommandIDs.debugContinue, {
