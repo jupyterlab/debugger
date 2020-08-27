@@ -726,10 +726,10 @@ export namespace IDebugger {
 }
 
 /**
- * An interface describing an optional custom sidebar panel.
+ * An interface describing an optional sidebar custom panel.
  */
 export interface IDebuggerSidebarCustomPanel extends Panel, IDisposable {}
-s;
+
 /**
  * The visual debugger token.
  */
@@ -750,7 +750,7 @@ export const IDebuggerSources = new Token<IDebugger.ISources>(
 );
 
 /**
- * An optional info panel token.
+ * An optional sidebar custom panel token.
  */
 export const IDebuggerSidebarCustomPanel = new Token<
   IDebuggerSidebarCustomPanel
