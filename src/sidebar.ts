@@ -93,7 +93,7 @@ export class DebuggerSidebar extends Panel implements IDebugger.ISidebar {
    * If the widget is already contained in the sidebar, it will be moved.
    * The item can be removed from the sidebar by setting its parent to `null`.
    */
-  addItem(widget: Widget) {
+  addItem(widget: Widget): void {
     this._body.addWidget(widget);
   }
 
@@ -108,7 +108,7 @@ export class DebuggerSidebar extends Panel implements IDebugger.ISidebar {
    * If the widget is already contained in the sidebar, it will be moved.
    * The item can be removed from the sidebar by setting its parent to `null`.
    */
-  insertItem(index: number, widget: Widget) {
+  insertItem(index: number, widget: Widget): void {
     this._body.insertWidget(index, widget);
   }
 
