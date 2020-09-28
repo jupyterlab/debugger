@@ -46,12 +46,7 @@ import { DebuggerHandler } from './handler';
 
 import { EditorHandler } from './handlers/editor';
 
-import {
-  IDebugger,
-  IDebuggerConfig,
-  IDebuggerSources,
-  IDebuggerSidebarCustomPanel
-} from './tokens';
+import { IDebugger, IDebuggerConfig, IDebuggerSources } from './tokens';
 
 import { ReadOnlyEditorFactory } from './panels/sources/factory';
 
@@ -369,8 +364,7 @@ const main: JupyterFrontEndPlugin<void> = {
     ICommandPalette,
     ISettingRegistry,
     IThemeManager,
-    IDebuggerSources,
-    IDebuggerSidebarCustomPanel
+    IDebuggerSources
   ],
   autoStart: true,
   activate: async (
@@ -382,8 +376,7 @@ const main: JupyterFrontEndPlugin<void> = {
     palette: ICommandPalette | null,
     settingRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null,
-    debuggerSources: IDebugger.ISources | null,
-    customPanel: IDebuggerSidebarCustomPanel | null
+    debuggerSources: IDebugger.ISources | null
   ): Promise<void> => {
     const { commands, shell, serviceManager } = app;
     const { kernelspecs } = serviceManager;
@@ -476,10 +469,9 @@ const main: JupyterFrontEndPlugin<void> = {
     };
 
     const sidebar = new Debugger.Sidebar({
-      callstackCommands,
-      customPanel,
-      editorServices,
       service,
+      callstackCommands,
+      editorServices,
       themeManager
     });
 

@@ -17,7 +17,7 @@ import { Sources as SourcesPanel } from './panels/sources';
 
 import { Variables as VariablesPanel } from './panels/variables';
 
-import { IDebugger, IDebuggerSidebarCustomPanel } from './tokens';
+import { IDebugger } from './tokens';
 
 /**
  * A debugger sidebar.
@@ -37,14 +37,11 @@ export class DebuggerSidebar extends Panel {
     const {
       callstackCommands,
       editorServices,
-      customPanel = null,
       service,
       themeManager
     } = options;
 
     const model = service.model;
-
-    this.customPanel = customPanel;
 
     this.variables = new VariablesPanel({
       model: model.variables,
@@ -79,9 +76,6 @@ export class DebuggerSidebar extends Panel {
     const body = new SplitPanel();
 
     body.orientation = 'vertical';
-    if (this.customPanel) {
-      body.addWidget(this.customPanel);
-    }
     body.addWidget(this.variables);
     body.addWidget(this.callstack);
     body.addWidget(this.breakpoints);
@@ -105,11 +99,6 @@ export class DebuggerSidebar extends Panel {
     }
     super.dispose();
   }
-
-  /**
-   * An optional custom sidebar panel
-   */
-  readonly customPanel?: IDebuggerSidebarCustomPanel | null;
 
   /**
    * The variables widget.
@@ -158,11 +147,6 @@ export namespace DebuggerSidebar {
      * An optional application theme manager to detect theme changes.
      */
     themeManager?: IThemeManager | null;
-
-    /**
-     * An optional info panel
-     */
-    customPanel?: IDebuggerSidebarCustomPanel | null;
   }
 
   /**

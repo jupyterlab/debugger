@@ -7,11 +7,9 @@ import { KernelMessage, Session } from '@jupyterlab/services';
 
 import { Token } from '@lumino/coreutils';
 
-import { IObservableDisposable, IDisposable } from '@lumino/disposable';
+import { IObservableDisposable } from '@lumino/disposable';
 
 import { ISignal, Signal } from '@lumino/signaling';
-
-import { Panel } from '@lumino/widgets';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
 
@@ -726,11 +724,6 @@ export namespace IDebugger {
 }
 
 /**
- * An interface describing an optional custom sidebar panel.
- */
-export interface IDebuggerSidebarCustomPanel extends Panel, IDisposable {}
-s;
-/**
  * The visual debugger token.
  */
 export const IDebugger = new Token<IDebugger>('@jupyterlab/debugger:IDebugger');
@@ -748,10 +741,3 @@ export const IDebuggerConfig = new Token<IDebugger.IConfig>(
 export const IDebuggerSources = new Token<IDebugger.ISources>(
   '@jupyterlab/debugger:IDebuggerSources'
 );
-
-/**
- * An optional info panel token.
- */
-export const IDebuggerSidebarCustomPanel = new Token<
-  IDebuggerSidebarCustomPanel
->('@jupyterlab/debugger:IDebuggerSidebarCustomPanel');
