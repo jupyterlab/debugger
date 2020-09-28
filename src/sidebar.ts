@@ -107,7 +107,7 @@ export class DebuggerSidebar extends Panel {
   }
 
   /**
-   * An optional sidebar custom panel
+   * An optional custom sidebar panel
    */
   readonly customPanel?: IDebuggerSidebarCustomPanel | null;
 
@@ -160,7 +160,7 @@ export namespace DebuggerSidebar {
     themeManager?: IThemeManager | null;
 
     /**
-     * An optional sidebar custom panel
+     * An optional info panel
      */
     customPanel?: IDebuggerSidebarCustomPanel | null;
   }
