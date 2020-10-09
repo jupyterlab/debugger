@@ -1,8 +1,11 @@
 # @jupyterlab/debugger
 
+## Archived
+
+**This project is archived. Development is now happening in https://github.com/jupyerlab/jupyterlab**
+
 ![Github Actions Status](https://github.com/jupyterlab/debugger/workflows/Tests/badge.svg)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyterlab/debugger/stable?urlpath=/lab/tree/examples/index.ipynb)
-[![npm](https://img.shields.io/npm/v/@jupyterlab/debugger.svg)](https://www.npmjs.com/package/@jupyterlab/debugger)
 
 A JupyterLab debugger UI extension. This extension is under active development.
 
