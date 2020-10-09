@@ -5255,11 +5255,6 @@ ms@^2.1.1:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
-murmurhash2@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/murmurhash2/-/murmurhash2-0.1.0.tgz#ace6cecc699080d63b9d856ce6593a9d07d445b7"
-  integrity sha512-k/0g4jE/NRCRqjTeZOzZOfjXs/TqXuV6yl6RfXApoi0io7K7oOJXQ217OymoNDLksmrhCvzcDi/Yj1wOnA57xQ==
-
 mute-stream@0.0.8:
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
