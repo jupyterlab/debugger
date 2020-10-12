@@ -12,7 +12,8 @@ let local = {
   transform: {
     '\\.(ts|tsx)?$': 'ts-jest',
     '\\.svg$': 'jest-raw-loader'
-  }
+  },
+  testEnvironment: './test/custom-env'
 };
 
 Object.keys(local).forEach(option => {

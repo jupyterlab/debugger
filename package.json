@@ -71,7 +71,6 @@
     "@lumino/datagrid": "^0.6.0",
     "@lumino/disposable": "^1.2.0",
     "@lumino/widgets": "^1.8.0",
-    "murmurhash-js": "^1.0.0",
     "vscode-debugprotocol": "^1.37.0"
   },
   "devDependencies": {
@@ -80,7 +79,6 @@
     "@jupyterlab/testutils": "^2.2.0",
     "@types/codemirror": "0.0.76",
     "@types/jest": "^24.0.17",
-    "@types/murmurhash-js": "1.0.3",
     "@types/react-dom": "^16.9.8",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
     "@typescript-eslint/parser": "^2.33.0",
