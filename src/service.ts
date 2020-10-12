@@ -573,7 +573,11 @@ export class DebuggerService implements IDebugger, IDisposable {
         const { breakpoints, source } = val;
         map.set(
           source,
-          breakpoints.map(point => ({ ...point, verified: true }))
+          breakpoints.map(point => ({
+            ...point,
+            source: { path: source },
+            verified: true
+          }))
         );
         return map;
       },
