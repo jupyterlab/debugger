@@ -1,2 +1,2 @@
-jupyter labextension install @jupyterlab/debugger@0.3.4 --debug --no-build
+jupyter labextension install @jupyterlab/debugger@0.3.5 --debug --no-build
 jupyter lab build --minimize=False
