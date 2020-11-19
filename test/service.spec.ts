@@ -195,7 +195,8 @@ describe('DebuggerService', () => {
       sourceBreakpoints = breakpoints.map(breakpoint => {
         return {
           line: breakpoint.line,
-          verified: breakpoint.verified
+          verified: breakpoint.verified,
+          source: breakpoint.source
         };
       });
       await service.updateBreakpoints(code, breakpoints);
