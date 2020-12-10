@@ -11,9 +11,9 @@ import React, { useEffect, useState } from 'react';
 
 import { IDebugger } from '../../tokens';
 
-import { convertType } from '.';
-
 import { VariablesModel } from './model';
+
+import { convertType } from '.';
 
 /**
  * The body for tree of variables.
@@ -38,17 +38,18 @@ export class VariablesBodyTree extends ReactWidget {
    * Render the VariablesBodyTree.
    */
   render(): JSX.Element {
-    return (
-      <>
-        {this._scopes.map(scope => (
-          <VariablesComponent
-            key={scope.name}
-            service={this._service}
-            data={scope.variables}
-            filter={this._filter}
-          />
-        ))}
-      </>
+    const scope =
+      this._scopes.find(scope => scope.name === this._scope) ?? this._scopes[0];
+
+    return scope ? (
+      <VariablesComponent
+        key={scope.name}
+        service={this._service}
+        data={scope.variables}
+        filter={this._filter}
+      />
+    ) : (
+      <div></div>
     );
   }
 
@@ -57,6 +58,14 @@ export class VariablesBodyTree extends ReactWidget {
    */
   set filter(filter: Set<string>) {
     this._filter = filter;
+    this.update();
+  }
+
+  /**
+   * Set the current scope
+   */
+  set scope(scope: string) {
+    this._scope = scope;
     this.update();
   }
 
@@ -73,6 +82,7 @@ export class VariablesBodyTree extends ReactWidget {
     this.update();
   }
 
+  private _scope = '';
   private _scopes: IDebugger.IScope[] = [];
   private _filter = new Set<string>();
   private _service: IDebugger;
@@ -106,7 +116,7 @@ const VariablesComponent = ({
       {variables
         ?.filter(variable => !filter.has(variable.evaluateName))
         .map(variable => {
-          const key = `${variable.evaluateName}-${variable.type}-${variable.value}`;
+          const key = `${variable.name}-${variable.evaluateName}-${variable.type}-${variable.value}`;
           return (
             <VariableComponent
               key={key}
