@@ -2,7 +2,7 @@
 
 ## Archived
 
-**This project is archived. Development is now happening in https://github.com/jupyerlab/jupyterlab**.
+**This project is archived. Development is now happening in https://github.com/jupyterlab/jupyterlab**.
 
 **If you use JupyterLab 3.x:**
 
@@ -11,12 +11,12 @@ The debugger extension is shipped by default with JupyterLab 3.x and doesn't nee
 Be sure to install a kernel that supports debugging, such as `xeus-python`:
 
 ```bash
-conda install -c conda-forge xeus-python ptvsd
+conda install -c conda-forge xeus-python
 ```
 
 Refer to the documentation for more details: https://jupyterlab.readthedocs.io/en/latest/user/debugger.html
 
-Please open new issues and pull requests on the JupyterLab repo: https://github.com/jupyerlab/jupyterlab
+Please open new issues and pull requests on the JupyterLab repo: https://github.com/jupyterlab/jupyterlab
 
 **If you use JupyterLab 2.x:**
 
